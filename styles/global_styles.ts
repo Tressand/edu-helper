@@ -40,10 +40,34 @@ const global_styles = StyleSheet.create({
     borderRadius: 25,
     borderWidth: 1, 
   },
-  double_input_container: {
+  date_input_box: {
+    flex:3,
+    height:40,
+    paddingRight: 10,
+    paddingLeft:10,
+    textAlign: 'center',
+    fontStyle: 'normal',
+    fontWeight: 'medium'
+  },
+  multiple_input_container: {
     flexDirection: 'row',
     height: 50,
     paddingVertical:0
+  },
+  evenly_divided_input: {
+    flex: 1,
+    width: '25%',
+    textAlign: 'center',
+  },
+  double_container: {
+    height:'auto',
+    paddingVertical:0,
+    flexDirection: 'column'
+  },
+  secondary_double_container: {
+    fontSize: 18,
+    paddingVertical:5,
+    textAlign:'center'
   },
   double_input_left: {
     flex: 1,

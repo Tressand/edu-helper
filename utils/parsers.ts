@@ -33,19 +33,77 @@ export const parseLicensePlate = (id: string) => {
   return id
 }
 
+export const parseNumber = (value: string) => {
+  if(value == '') return ''
+  const mantise = value.split(',')[1] ? (',' + value.split(',')[1]) : ''
+  const parsedInt = value
+  .replace(/[^\d,]/, '')
+  .split(',')
+  [0]
+  .split('')
+  .reverse()
+  .join('')
+  .match(/.{1,3}/g)
+  .join('.')
+  .split('')
+  .reverse()
+  .join('')
+
+  const parsedFloat = parsedInt + mantise
+  return value.endsWith(',') ? parsedFloat + ',' : parsedFloat
+}
+
+const prefixedNumber = (prefix:string, value:string) => {
+  if (value == '' || value == prefix) return ''
+  const parsedFloat = parseNumber(value.replace(prefix,'').replace('.', ''))
+  return prefix + parsedFloat
+}
+
+const prefixedNumberToNumber = (prefix: string, value:string) => {
+  return parseFloat(value.replace(prefix,'').replace('.','').replace(',','.'))
+}
+
 export const parsePrice = (price: string) => {
-  if (price == '' || price == '$') return ''
-  price = price.replace(/[\$\.]/g, '').replace(/[^\d,]/, '')
-  const value = price.split(',')
-  const parsedInt = value[0]
-    .split('')
-    .reverse()
-    .join('')
-    .match(/.{1,3}/g)
-    .join('.')
-    .split('')
-    .reverse()
-    .join('');
-  if (price.endsWith(',')) return '$' + parsedInt + ','
-  return '$' + (value.length > 1 ? parsedInt + ',' + value[1] : parsedInt)
+  return prefixedNumber('$', price)
+}
+
+export const priceToNumber = (price:string) => {
+  return prefixedNumberToNumber('$', price)
+}
+
+export const parsePercentage = (value: string) => {
+  return prefixedNumber('%', value)
+}
+
+export const percentageToNumber = (value:string) => {
+  return prefixedNumberToNumber('%', value)
+}
+
+export const logFormData = (formData) => {
+  alert(`
+name: ${formData.name}\n
+address: ${formData.address}\n
+number: ${formData.number}\n
+brand: ${formData.brand}\n
+model: ${formData.model}\n
+id: ${formData.id}\n
+extra: ${formData.extra}\n
+locations: ${formData.locations}\n
+workCost: ${formData.workCost}\n
+paintCost: ${formData.paintCost}\n
+mechanicCost: ${formData.mechanicCost}\n
+date: ${formData.date.toLocaleDateString()}\n
+`)
+}
+
+export const logItemList = (ids,itemList) => {
+  let str = ''
+  ids.forEach(id => { if(itemList[id]) {str += `item: ${itemList[id].name}, value: ${itemList[id].value}\n`} else {str += `id=${id} present but has no value\n`}})
+  alert(str)
+}
+
+export const logParsedItemList = (itemList) => {
+  let str = ''
+  itemList.items.forEach(item => { str += `item: ${item.name}, value: ${item.value}\n` })
+  alert(str)
 }

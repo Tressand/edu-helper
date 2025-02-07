@@ -1,6 +1,6 @@
 import { PDFDocument } from "pdf-lib"
 import * as FileSystem from 'expo-file-system'
-import { parsePhoneNumber, parsePrice, parseLicensePlate} from "./parsers"
+import { parsePhoneNumber, parsePrice, parseLicensePlate, logParsedItemList} from "./parsers"
 import { Platform } from "react-native"
 import { Asset } from "expo-asset"
 import * as Sharing from 'expo-sharing'
@@ -48,11 +48,10 @@ export default async function createBudgetDocument(formData: any) {
 }
 
 function fillFormWithFormData(formData: any, form:any){
-  // Must change when ready 
-  const date = new Date()
-  form.getTextField('Día').setText(date.getDay().toString())
-  form.getTextField('Mes').setText(date.getMonth().toString())
-  form.getTextField('Año').setText(date.getFullYear().toString())
+  const date = formData.date.toLocaleDateString().split('/')
+  form.getTextField('Día').setText(date[0])
+  form.getTextField('Mes').setText(date[1])
+  form.getTextField('Año').setText(date[2])
   form.getTextField('Nombre y Apellido').setText(formData.name)
   form.getTextField('Dirección').setText(formData.address)
   form.getTextField('Telefono').setText(parsePhoneNumber(formData.number))
@@ -61,7 +60,7 @@ function fillFormWithFormData(formData: any, form:any){
   form.getTextField('Patente').setText(parseLicensePlate(formData.id))
   form.getTextField('Observaciones').setText(formData.extra)
   form.getTextField('Detalle').setText(formData.locations)
-  form.getTextField('Nro. Hoja').setText('1/1')
+  form.getTextField('Nro. Hoja').setText(`${formData.page}/${formData.total_pages}`)
 
   let total = 0
   let i = 0
@@ -70,25 +69,24 @@ function fillFormWithFormData(formData: any, form:any){
     i++
     formData.items.forEach((item: any) => {
       if (i > 9) return
-      console.log(item)
       form.getTextField(`Item${i}`).setText('    • ' + item.name)
       form.getTextField(`Precio${i}`).setText(item.value)
-      total += parseFloat(item.value.replace('$','').replace('.','').replace(',','.'))
       i++
     })
+  } else {
+    form.getTextField(`Item0`).setText('No se realizarán cambios de respuestos:')
   }
 
-  form.getTextField((i == 0 ? `Item0` : `Item10`)).setText('Mano de Obra (Chapa)')
-  form.getTextField((i == 0 ? `Precio0` : `Precio10`)).setText(formData.workCost)
-  total += parseFloat(formData.workCost.replace('$','').replace('.','').replace(',','.'))
-  form.getTextField((i == 0 ? `Item1` : `Item11`)).setText('Mano de Obra (Pintura)')
-  form.getTextField((i == 0 ? `Precio1` : `Precio11`)).setText(formData.paintCost)
-  total += parseFloat(formData.paintCost.replace('$','').replace('.','').replace(',','.'))
-  form.getTextField((i == 0 ? `Item2` : `Item12`)).setText('Mecánica')
-  form.getTextField((i == 0 ? `Precio2` : `Precio12`)).setText(formData.mechanicCost)
-  total += parseFloat(formData.mechanicCost.replace('$','').replace('.','').replace(',','.'))
+  form.getTextField((i == 0 ? `Item2` : `Item10`)).setText('Mano de Obra (Chapa)')
+  form.getTextField((i == 0 ? `Precio2` : `Precio10`)).setText(formData.workCost)
+  form.getTextField((i == 0 ? `Item3` : `Item11`)).setText('Mano de Obra (Pintura)')
+  form.getTextField((i == 0 ? `Precio3` : `Precio11`)).setText(formData.paintCost)
+  form.getTextField((i == 0 ? `Item4` : `Item12`)).setText('Mecánica')
+  form.getTextField((i == 0 ? `Precio4` : `Precio12`)).setText(formData.mechanicCost)
 
-  form.getTextField('Total').setText(parsePrice(total.toString()))
+  form.getTextField('Total').setText(formData.total)
+
+  form.flatten()
 }
 
 async function downloadPDFFileFromBytes(bytes: Uint8Array, filename: string) {
