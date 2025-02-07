@@ -3,7 +3,7 @@ import { Text, View, ScrollView, TouchableOpacity, TextInput, Image, Platform, S
 import DateTimePicker from '@react-native-community/datetimepicker'
 import global_styles from '../styles/global_styles';
 import createBudgetDocument from '../utils/pdfHandler';
-import { parsePhoneNumber, parsePrice, parseLicensePlate, logFormData, logItemList, priceToNumber, parsePercentage, percentageToNumber, parseNumber } from '../utils/parsers';
+import { parsePhoneNumber, parsePrice, parseLicensePlate, priceToNumber, parsePercentage, percentageToNumber, parseNumber } from '../utils/parsers';
 
 type FormDataObject = {
   name:string,
@@ -74,37 +74,41 @@ const mockData = {
   }
 }
 
+const initialFormData : FormDataObject = {
+  name: '',
+  address: '',
+  number: 0,
+  brand: '',
+  model: '',
+  id: '',
+  extra: '',
+  locations: '',
+  workCost: '',
+  paintCost: '',
+  mechanicCost: '',
+  total:'',
+  date: new Date(),
+  page:'1',
+  total_pages:'1'
+}
+
+const emptyCostObject = {
+  units: '',
+  perUnit: '',
+  percentage: '',
+}
+
 export default function Form() {
   const [ids, setIds]: [[...number[]], setState<[...number[]]>] = useState([1,2,3,4])
-  const [formData, setFormData]: [FormDataObject, setState<FormDataObject>] = useState({
-    name: '',
-    address: '',
-    number: 0,
-    brand: '',
-    model: '',
-    id: '',
-    extra: '',
-    locations: '',
-    workCost: '',
-    paintCost: '',
-    mechanicCost: '',
-    total:'',
-    date: new Date(),
-    page:'1',
-    total_pages:'1'
-  })
+  const [formData, setFormData]: [FormDataObject, setState<FormDataObject>] = useState(initialFormData)
   const [showDatePicker, setShowDatePicker]: [boolean, setState<boolean>] = useState(false)
   const [itemList, setItemList]: [ItemList, setState<ItemList>] = useState({})
   const [workCostObject, setWorkCostObject]: [CostObject, setState<CostObject>] = useState({
-    units: '',
-    perUnit: '',
-    percentage: '',
+    ...emptyCostObject,
     setTotal: (baseFormData, value: string) => {return {...baseFormData, workCost: value}}
   })
   const [paintCostObject, setPaintCostObject]: [CostObject, setState<CostObject>] = useState({
-    units: '',
-    perUnit: '',
-    percentage: '',
+    ...emptyCostObject,
     setTotal: (baseFormData, value: string) => {return {...baseFormData, paintCost: value}}
   })
   const setCostObjectValue = (object: CostObject, setter: setState<CostObject>, key:string, value:string) => {
@@ -201,30 +205,37 @@ export default function Form() {
         style={global_styles.scroll_container}
         showsVerticalScrollIndicator={false}
       >
-        <TouchableOpacity
-          style={[global_styles.input_box, global_styles.button,{width:'auto', alignSelf:'center'}]}
-          onPress={() => {
-            const totalWork = priceCalculator({...mockData.costObjects.work, setTotal: workCostObject.setTotal})
-            const totalPaint = priceCalculator({...mockData.costObjects.paint, setTotal: paintCostObject.setTotal})
-            let finalFormData: FormDataObject = {...mockData.formData, workCost: totalWork, paintCost: totalPaint}
-            setFormData({...finalFormData, total:parsePrice(itemsTotal(finalFormData, mockData.items).toString())})
-            setItemList(mockData.items)
-            setPaintCostObject({...mockData.costObjects.work, setTotal: workCostObject.setTotal})
-            setWorkCostObject({...mockData.costObjects.paint, setTotal: paintCostObject.setTotal})
-          }}
-        >
-          <Text style={[global_styles.title, {color: '#FAFAFA'}]}>Probar</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[global_styles.input_box, global_styles.button,{width:'auto', alignSelf:'center'}]} onPress={() => logFormData(formData)}>
-          <Text style={[global_styles.title, {color: '#FAFAFA'}]}>Ver Datos</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[global_styles.input_box, global_styles.button,{width:'auto', alignSelf:'center'}]} onPress={() => logItemList(ids, itemList)}>
-          <Text style={[global_styles.title, {color: '#FAFAFA'}]}>Ver Items</Text>
-        </TouchableOpacity>
+        <View style={{flexDirection:'row', gap:20, justifyContent:'center', alignItems:'center'}}>
+          <TouchableOpacity
+            style={[global_styles.input_box, global_styles.button,{width:'auto', alignSelf:'center'}]}
+            onPress={() => {
+              const totalWork = priceCalculator({...mockData.costObjects.work, setTotal: workCostObject.setTotal})
+              const totalPaint = priceCalculator({...mockData.costObjects.paint, setTotal: paintCostObject.setTotal})
+              let finalFormData: FormDataObject = {...mockData.formData, workCost: totalWork, paintCost: totalPaint}
+              setFormData({...finalFormData, total:parsePrice(itemsTotal(finalFormData, mockData.items).toString())})
+              setItemList(mockData.items)
+              setPaintCostObject({...mockData.costObjects.work, setTotal: workCostObject.setTotal})
+              setWorkCostObject({...mockData.costObjects.paint, setTotal: paintCostObject.setTotal})
+            }}
+          >
+            <Text style={[global_styles.title, {color: '#FAFAFA'}]}>Probar</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[global_styles.input_box, global_styles.button,{width:'auto', alignSelf:'center'}]}
+            onPress={() => {
+              setFormData(initialFormData)
+              setItemList({})
+              setWorkCostObject({...emptyCostObject, setTotal:workCostObject.setTotal})
+              setPaintCostObject({...emptyCostObject, setTotal:paintCostObject.setTotal})
+            }}
+          >
+            <Text style={[global_styles.title, {color: '#FAFAFA'}]}>Limpiar</Text>
+          </TouchableOpacity>
+        </View>
         <View style={{width:'100%',flexDirection:'row', gap:10, alignItems:'center', justifyContent:'center'}}>
           { Platform.OS != 'web' ? 
             (
-              <TouchableOpacity style={[global_styles.input_box, {width:'70%'}]} onPress={() => setShowDatePicker(true)} >
+              <TouchableOpacity style={[global_styles.input_box, {width:'40%'}]} onPress={() => setShowDatePicker(true)} >
                 <Text style = {{textAlign: 'center', fontSize: 18}}> {formData.date.toLocaleDateString()} </Text>
                 { showDatePicker && (
                   <DateTimePicker
@@ -249,7 +260,7 @@ export default function Form() {
               />
             )
           }
-          <View style={[global_styles.input_box, {height:'auto', width:'20%',flexDirection:'row', alignItems:'center', paddingVertical:0}]}>
+          <View style={[global_styles.input_box, {height:40, width:'20%',flexDirection:'row', alignItems:'center', paddingVertical:0}]}>
             <TextInput
               value = {formData.page}
               keyboardType='number-pad'
