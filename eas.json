@@ -4,6 +4,11 @@
       "android" : {
         "buildType": "apk",
         "distribution": "internal"
+      },
+      "ios": {
+        "developmentClient": true,
+        "distribution": "internal",
+        "buildType": "export"
       }
     }
   }
