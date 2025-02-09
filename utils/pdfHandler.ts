@@ -48,10 +48,9 @@ export default async function createBudgetDocument(formData: any) {
 }
 
 function fillFormWithFormData(formData: any, form:any){
-  const date = formData.date.toLocaleDateString().split('/')
-  form.getTextField('Día').setText(date[0])
-  form.getTextField('Mes').setText(date[1])
-  form.getTextField('Año').setText(date[2])
+  form.getTextField('Día').setText(formData.date.getDate().toString())
+  form.getTextField('Mes').setText((formData.date.getMonth() + 1).toString())
+  form.getTextField('Año').setText(formData.date.getFullYear().toString())
   form.getTextField('Nombre y Apellido').setText(formData.name)
   form.getTextField('Dirección').setText(formData.address)
   form.getTextField('Telefono').setText(parsePhoneNumber(formData.number))
@@ -77,9 +76,9 @@ function fillFormWithFormData(formData: any, form:any){
     form.getTextField(`Item0`).setText('No se realizarán cambios de respuestos:')
   }
 
-  form.getTextField((i == 0 ? `Item2` : `Item10`)).setText('Mano de Obra (Chapa)')
+  form.getTextField((i == 0 ? `Item2` : `Item10`)).setText('Mano de Obra (Chapa) [' + formData.days + ' días]')
   form.getTextField((i == 0 ? `Precio2` : `Precio10`)).setText(formData.workCost)
-  form.getTextField((i == 0 ? `Item3` : `Item11`)).setText('Mano de Obra (Pintura)')
+  form.getTextField((i == 0 ? `Item3` : `Item11`)).setText('Mano de Obra (Pintura) [' + formData.sheets + ' paños]')
   form.getTextField((i == 0 ? `Precio3` : `Precio11`)).setText(formData.paintCost)
   form.getTextField((i == 0 ? `Item4` : `Item12`)).setText('Mecánica')
   form.getTextField((i == 0 ? `Precio4` : `Precio12`)).setText(formData.mechanicCost)

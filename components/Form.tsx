@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
-import { Text, View, ScrollView, TouchableOpacity, TextInput, Image, Platform, SafeAreaView} from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity, TextInput, Image, Platform, SafeAreaView, useColorScheme} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker'
-import global_styles from '../styles/global_styles';
 import createBudgetDocument from '../utils/pdfHandler';
 import { parsePhoneNumber, parsePrice, parseLicensePlate, priceToNumber, parsePercentage, percentageToNumber, parseNumber } from '../utils/parsers';
+import getGlobalStyles, { getColors } from '../styles/global_styles';
 
 type FormDataObject = {
   name:string,
@@ -38,6 +38,7 @@ type CostObject = {
 
 type setState<Type> =  React.Dispatch<React.SetStateAction<Type>>
 
+const devMode = false
 const mockData = {
   formData: {
     name: 'Juan Pérez',
@@ -118,6 +119,9 @@ export default function Form() {
     setter(newCostObject)
     updateTotal(newFormData, itemList)
   }
+  const theme = useColorScheme()
+  const global_styles = getGlobalStyles(theme)
+  const colors = getColors(theme)
 
   const updateTotal = (formData:FormDataObject, items:ItemList) => {
     setFormData({...formData, total:parsePrice(itemsTotal(formData, items).toString())})
@@ -190,13 +194,18 @@ export default function Form() {
   }
 
   const submit = () => {
-    const data: (FormDataObject & {items: [...ItemPair[]]}) = {...formData, items: []}
+    const data: (FormDataObject & {items: [...ItemPair[]], days:number, sheets:number}) = {
+      ...formData,
+      items: [],
+      days: parseInt(workCostObject.units) || 0,
+      sheets: parseInt(paintCostObject.units) || 0,
+    }
     ids.forEach((id) => {
       if (itemList[id] && (itemList[id].name != '' || itemList[id].value != '')) {
         data.items.push(itemList[id])
       }
     })
-    const pdfDocument = createBudgetDocument(data)
+    createBudgetDocument(data)
   }
 
   return (
@@ -206,20 +215,31 @@ export default function Form() {
         showsVerticalScrollIndicator={false}
       >
         <View style={{flexDirection:'row', gap:20, justifyContent:'center', alignItems:'center'}}>
-          <TouchableOpacity
-            style={[global_styles.input_box, global_styles.button,{width:'auto', alignSelf:'center'}]}
-            onPress={() => {
-              const totalWork = priceCalculator({...mockData.costObjects.work, setTotal: workCostObject.setTotal})
-              const totalPaint = priceCalculator({...mockData.costObjects.paint, setTotal: paintCostObject.setTotal})
-              let finalFormData: FormDataObject = {...mockData.formData, workCost: totalWork, paintCost: totalPaint}
-              setFormData({...finalFormData, total:parsePrice(itemsTotal(finalFormData, mockData.items).toString())})
-              setItemList(mockData.items)
-              setPaintCostObject({...mockData.costObjects.work, setTotal: workCostObject.setTotal})
-              setWorkCostObject({...mockData.costObjects.paint, setTotal: paintCostObject.setTotal})
-            }}
-          >
-            <Text style={[global_styles.title, {color: '#FAFAFA'}]}>Probar</Text>
-          </TouchableOpacity>
+          { devMode ? (
+            <>
+              <TouchableOpacity
+                style={[global_styles.input_box, global_styles.button,{width:'auto', alignSelf:'center'}]}
+                onPress={() => {
+                  const totalWork = priceCalculator({...mockData.costObjects.work, setTotal: workCostObject.setTotal})
+                  const totalPaint = priceCalculator({...mockData.costObjects.paint, setTotal: paintCostObject.setTotal})
+                  let finalFormData: FormDataObject = {...mockData.formData, workCost: totalWork, paintCost: totalPaint}
+                  setFormData({...finalFormData, total:parsePrice(itemsTotal(finalFormData, mockData.items).toString())})
+                  setItemList(mockData.items)
+                  setPaintCostObject({...mockData.costObjects.work, setTotal: workCostObject.setTotal})
+                  setWorkCostObject({...mockData.costObjects.paint, setTotal: paintCostObject.setTotal})
+                }}
+              >
+                <Text style={[global_styles.title, {color: '#FAFAFA'}]}>Probar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[global_styles.input_box, global_styles.button,{width:'auto', alignSelf:'center'}]}
+                onPress={() => alert(theme)}
+              >
+                <Text style={[global_styles.title, {color: '#FAFAFA'}]}>Tema</Text>
+              </TouchableOpacity>
+            </>
+          ) : (<></>)
+          }
           <TouchableOpacity
             style={[global_styles.input_box, global_styles.button,{width:'auto', alignSelf:'center'}]}
             onPress={() => {
@@ -241,6 +261,7 @@ export default function Form() {
                   <DateTimePicker
                     testID="dateTimePicker"
                     value={formData.date}
+                    themeVariant={theme}
                     mode={'date'}
                     is24Hour={true}
                     onChange={(_ev, date) => {
@@ -264,16 +285,18 @@ export default function Form() {
             <TextInput
               value = {formData.page}
               keyboardType='number-pad'
-              style = {{width:'50%', textAlign:'center', overflow:'hidden'}}
+              style = {[global_styles.text, {width:'50%', textAlign:'center', overflow:'hidden'}]}
               placeholder='()'
+              placeholderTextColor={colors.text}
               onChangeText={(text) => setFormData({...formData, page: parseNumber(text)})}
             />
-            <Text>/</Text>
+            <Text style={global_styles.text}>/</Text>
             <TextInput
               value = {formData.total_pages}
               keyboardType='number-pad'
-              style = {{width:'50%', textAlign:'center', overflow:'hidden'}}
+              style = {[global_styles.text, {width:'50%', textAlign:'center', overflow:'hidden'}]}
               placeholder='()'
+              placeholderTextColor={colors.text}
               onChangeText={(text) => setFormData({...formData, total_pages: parseNumber(text)})}
             />
           </View>
@@ -283,12 +306,14 @@ export default function Form() {
           onChangeText={(text) => setFormData({...formData, name: text})}
           style = {global_styles.input_box}
           placeholder='Nombre y Apellido'
+          placeholderTextColor={colors.text}
         />
         <TextInput
           value={formData.address}
           onChangeText={(text) => setFormData({...formData, address: text})}
           style = {global_styles.input_box}
           placeholder='Dirección'
+          placeholderTextColor={colors.text}
         />
         <TextInput
           value={parsePhoneNumber(formData.number)}
@@ -300,24 +325,28 @@ export default function Form() {
           keyboardType='number-pad'
           style = {global_styles.input_box}
           placeholder='Teléfono'
+          placeholderTextColor={colors.text}
         />
         <Text style={global_styles.title}>Información del Vehiculo</Text>
         <TextInput
           value={formData.brand}
           onChangeText={(text) => setFormData({...formData, brand: text})}
           style = {global_styles.input_box}
+          placeholderTextColor={colors.text}
           placeholder='Marca'
         />
         <TextInput
           value={formData.model}
           onChangeText={(text) => setFormData({...formData, model: text})}
           style = {global_styles.input_box}
+          placeholderTextColor={colors.text}
           placeholder='Modelo'
         />
         <TextInput
           value={parseLicensePlate(formData.id)}
           onChangeText={(text) => {setFormData({...formData, id: text.replace(/[ \-]/g,'').toUpperCase()})}}
           style = {global_styles.input_box}
+          placeholderTextColor={colors.text}
           placeholder='Patente'
         />
         <TextInput
@@ -325,6 +354,7 @@ export default function Form() {
           onChangeText={(text) => setFormData({...formData, extra: text})}
           multiline={true}
           style = {[global_styles.input_box, global_styles.multiline]}
+          placeholderTextColor={colors.text}
           placeholder='Observaciones'
         />
         <TextInput
@@ -332,6 +362,7 @@ export default function Form() {
           onChangeText={(text) => setFormData({...formData, locations: text})}
           multiline={true}
           style = {[global_styles.input_box, global_styles.multiline]}
+          placeholderTextColor={colors.text}
           placeholder='Reparación por daños en...'
         />
         <Text style={global_styles.title}>Repuestos a Cambiar</Text>
@@ -341,6 +372,7 @@ export default function Form() {
                 <TextInput
                   value={getValue(id) != undefined ? getValue(id).name : '' }
                   style = {[global_styles.double_input_left, {flex: 1}]}
+                  placeholderTextColor={colors.text}
                   placeholder='Item'
                   onChangeText={(text) => setName(id, text)}
                 />
@@ -348,6 +380,7 @@ export default function Form() {
                   value={getValue(id) != undefined ? getValue(id).value : ''}
                   keyboardType='number-pad'
                   style = {global_styles.double_input_right}
+                  placeholderTextColor={colors.text}
                   placeholder='Precio'
                   onChangeText={(text) => {setValue(id, parsePrice(text))}}
                 />
@@ -361,12 +394,15 @@ export default function Form() {
             </View>
           )
         }
-        <TouchableOpacity 
-          style={[global_styles.button_add, global_styles.input_box, {padding:0}]}
-          onPress={addItem}
-        >
-          <Image source={require('../assets/mas.png')} style = {global_styles.small_img} />
-        </TouchableOpacity>
+        { ids.length < 9 ?
+          (<TouchableOpacity 
+            style={[global_styles.button_add, global_styles.input_box, {padding:0}]}
+            onPress={addItem}
+          >
+            <Image source={require('../assets/mas.png')} style = {global_styles.small_img} />
+          </TouchableOpacity>) 
+          : (<Text style={global_styles.warning}>Se alcanzó el máximo de entradas para este presupuesto.</Text>)
+        }
 
         <Text style={global_styles.title}>Mano de Obra</Text>
         <View style={[global_styles.input_box, global_styles.double_container]}>
@@ -379,6 +415,7 @@ export default function Form() {
             <TextInput
               value = {workCostObject.perUnit}
               style = {global_styles.evenly_divided_input}
+              placeholderTextColor={colors.text}
               placeholder='$/Día'
               onChangeText={(text) => {
                 setCostObjectValue(workCostObject, setWorkCostObject, 'perUnit', parsePrice(text))
@@ -394,6 +431,7 @@ export default function Form() {
                   borderRightColor: 'gray'
                 }
               ]}
+              placeholderTextColor={colors.text}
               placeholder='Días'
               onChangeText={(text) => {
                 setCostObjectValue(workCostObject, setWorkCostObject, 'units', text)
@@ -403,6 +441,7 @@ export default function Form() {
               value = {workCostObject.percentage}
               keyboardType='number-pad'
               style = {global_styles.evenly_divided_input}
+              placeholderTextColor={colors.text}
               placeholder='%'
               onChangeText={(text) => {
                 setCostObjectValue(workCostObject, setWorkCostObject, 'percentage', parsePercentage(text))
@@ -425,6 +464,7 @@ export default function Form() {
             <TextInput
               value = {paintCostObject.perUnit}
               style = {global_styles.evenly_divided_input}
+              placeholderTextColor={colors.text}
               placeholder='$/Paño'
               onChangeText={(text) => {
                 setCostObjectValue(paintCostObject, setPaintCostObject, 'perUnit', parsePrice(text))
@@ -440,6 +480,7 @@ export default function Form() {
                   borderRightColor: 'gray'
                 }
               ]}
+              placeholderTextColor={colors.text}
               placeholder='Paños'
               onChangeText={(text) => {
                 setCostObjectValue(paintCostObject, setPaintCostObject, 'units', text)
@@ -449,6 +490,7 @@ export default function Form() {
               value = {paintCostObject.percentage}
               keyboardType='number-pad'
               style = {global_styles.evenly_divided_input}
+              placeholderTextColor={colors.text}
               placeholder='%'
               onChangeText={(text) => {
                 setCostObjectValue(paintCostObject, setPaintCostObject, 'percentage', parsePercentage(text))
@@ -465,13 +507,15 @@ export default function Form() {
           <TextInput
             value = 'Mecánica'
             editable = {false}
-            style = {{fontSize: 20, width:'25%', textAlign:'center'}}
+            style = {[global_styles.text, {fontSize: 20, width:'25%', textAlign:'center'}]}
+            placeholderTextColor={colors.text}
             placeholder='Item'
           />
           <TextInput
             value={formData.mechanicCost}
             keyboardType='number-pad'
-            style = {{textAlign:'center', width:'75%'}}
+            style = {[global_styles.text, {textAlign:'center', width:'75%'}]}
+            placeholderTextColor={colors.text}
             placeholder='Precio'
             onChangeText={(text) => {
               const newFormData = {...formData, mechanicCost: parsePrice(text)}
@@ -483,13 +527,14 @@ export default function Form() {
           <TextInput
             value = 'Total'
             editable = {false}
-            style = {{fontSize: 20, width:'25%', textAlign:'center'}}
+            style = {[global_styles.text, {fontSize: 20, width:'25%', textAlign:'center'}]}
+            placeholderTextColor={colors.text}
             placeholder='Item'
           />
           <TextInput
             value={formData.total}
             editable={false}
-            style = {{textAlign:'center', width:'75%'}}
+            style = {[global_styles.text, {textAlign:'center', width:'75%'}]}
           />
         </View>
         <TouchableOpacity style={[global_styles.input_box, global_styles.button]} onPress={submit}>

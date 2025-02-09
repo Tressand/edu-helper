@@ -7,8 +7,7 @@
       },
       "ios": {
         "developmentClient": true,
-        "distribution": "internal",
-        "buildType": "export"
+        "distribution": "internal"
       }
     }
   }
