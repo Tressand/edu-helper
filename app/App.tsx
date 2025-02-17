@@ -4,6 +4,7 @@ import { StyleSheet, Text, useColorScheme, View } from 'react-native';
 import Form from '../components/Form'
 import getGlobalStyles from '../styles/global_styles';
 
+export const version = 'v1.3'
 
 export default function App() {
   const global_styles = getGlobalStyles(useColorScheme())

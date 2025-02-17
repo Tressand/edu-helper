@@ -1,6 +1,6 @@
 import { PDFDocument } from "pdf-lib"
 import * as FileSystem from 'expo-file-system'
-import { parsePhoneNumber, parsePrice, parseLicensePlate, logParsedItemList} from "./parsers"
+import { parsePhoneNumber, parseLicensePlate, parseDate} from "./parsers"
 import { Platform } from "react-native"
 import { Asset } from "expo-asset"
 import * as Sharing from 'expo-sharing'
@@ -44,7 +44,7 @@ export default async function createBudgetDocument(formData: any) {
   // Save PDF to byte array
   const resultBytes = await pdf.save()
 
-  downloadPDFFileFromBytes(resultBytes, 'presupuesto.pdf')
+  downloadPDFFileFromBytes(resultBytes, `${formData.id != '' ? parseLicensePlate(formData.id) : 'presupuesto'}_${parseDate(formData.date)}`)
 }
 
 function fillFormWithFormData(formData: any, form:any){

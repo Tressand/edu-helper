@@ -1,7 +1,8 @@
 {
   "build": {
     "development": {
-      "android" : {
+      "channel": "development",
+      "android": {
         "buildType": "apk",
         "distribution": "internal"
       },

@@ -4,6 +4,7 @@ import DateTimePicker from '@react-native-community/datetimepicker'
 import createBudgetDocument from '../utils/pdfHandler';
 import { parsePhoneNumber, parsePrice, parseLicensePlate, priceToNumber, parsePercentage, percentageToNumber, parseNumber } from '../utils/parsers';
 import getGlobalStyles, { getColors } from '../styles/global_styles';
+import { version } from '../app/App';
 
 type FormDataObject = {
   name:string,
@@ -416,6 +417,7 @@ export default function Form() {
               value = {workCostObject.perUnit}
               style = {global_styles.evenly_divided_input}
               placeholderTextColor={colors.text}
+              keyboardType='number-pad'
               placeholder='$/Día'
               onChangeText={(text) => {
                 setCostObjectValue(workCostObject, setWorkCostObject, 'perUnit', parsePrice(text))
@@ -465,6 +467,7 @@ export default function Form() {
               value = {paintCostObject.perUnit}
               style = {global_styles.evenly_divided_input}
               placeholderTextColor={colors.text}
+              keyboardType='number-pad'
               placeholder='$/Paño'
               onChangeText={(text) => {
                 setCostObjectValue(paintCostObject, setPaintCostObject, 'perUnit', parsePrice(text))
@@ -540,6 +543,7 @@ export default function Form() {
         <TouchableOpacity style={[global_styles.input_box, global_styles.button]} onPress={submit}>
           <Text style={[global_styles.title, {color: '#FAFAFA'}]}>CREAR PRESUPUESTO</Text>
         </TouchableOpacity>
+        <Text style={global_styles.text}>{version} | Hecho por Gero {'<'}3</Text>
       </ScrollView>
     </SafeAreaView>
   );
