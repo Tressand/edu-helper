@@ -256,7 +256,7 @@ export default function Form() {
           { Platform.OS != 'web' ? 
             (
               <TouchableOpacity style={[global_styles.input_box, {width:'40%'}]} onPress={() => setShowDatePicker(true)} >
-                <Text style = {{textAlign: 'center', fontSize: 18}}> {formData.date.toLocaleDateString()} </Text>
+                <Text style = {[{textAlign: 'center', fontSize: 18}, global_styles.text]}> {formData.date.toLocaleDateString()} </Text>
                 { showDatePicker && (
                   <DateTimePicker
                     testID="dateTimePicker"

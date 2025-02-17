@@ -60,7 +60,7 @@ const prefixedNumber = (prefix:string, value:string) => {
 }
 
 const prefixedNumberToNumber = (prefix: string, value:string) => {
-  return parseFloat(value.replace(prefix,'').replace('.','').replace(',','.'))
+  return parseFloat(value.replace(prefix,'').replace(/[.]/g,'').replace(',','.'))
 }
 
 export const parsePrice = (price: string) => {
@@ -77,6 +77,10 @@ export const parsePercentage = (value: string) => {
 
 export const percentageToNumber = (value:string) => {
   return prefixedNumberToNumber('%', value)
+}
+
+export const parseDate = (date: Date) => {
+  return `${date.getDate() < 10 ? '0' + date.getDate(): date.getDate()}-${date.getMonth() < 10 ? '0' + date.getMonth(): date.getMonth()}-${date.getFullYear()}`
 }
 
 export const logFormData = (formData) => {
