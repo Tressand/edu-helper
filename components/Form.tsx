@@ -39,7 +39,7 @@ type CostObject = {
 
 type setState<Type> =  React.Dispatch<React.SetStateAction<Type>>
 
-const devMode = true
+const devMode = false
 const mockData = {
   formData: {
     name: 'Juan Pérez',
