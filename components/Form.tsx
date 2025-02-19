@@ -39,7 +39,7 @@ type CostObject = {
 
 type setState<Type> =  React.Dispatch<React.SetStateAction<Type>>
 
-const devMode = false
+const devMode = true
 const mockData = {
   formData: {
     name: 'Juan Pérez',
@@ -453,7 +453,7 @@ export default function Form() {
           <TextInput
             value={formData.workCost}
             editable={false}
-            style={global_styles.secondary_double_container}
+            style={[global_styles.secondary_double_container, global_styles.text]}
           />
         </View>
         <View style={[global_styles.input_box, global_styles.double_container]}>
@@ -503,7 +503,7 @@ export default function Form() {
           <TextInput
             value={formData.paintCost}
             editable={false}
-            style={global_styles.secondary_double_container}
+            style={[global_styles.secondary_double_container, global_styles.text]}
           />
         </View>
         <View style={[global_styles.input_box, global_styles.multiple_input_container]}>
@@ -537,7 +537,7 @@ export default function Form() {
           <TextInput
             value={formData.total}
             editable={false}
-            style = {[global_styles.text, {textAlign:'center', width:'75%'}]}
+            style = {[global_styles.text, {textAlign:'center', width:'75%', fontWeight:'bold', fontSize:20}]}
           />
         </View>
         <TouchableOpacity style={[global_styles.input_box, global_styles.button]} onPress={submit}>

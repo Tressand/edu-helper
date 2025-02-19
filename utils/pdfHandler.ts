@@ -44,7 +44,7 @@ export default async function createBudgetDocument(formData: any) {
   // Save PDF to byte array
   const resultBytes = await pdf.save()
 
-  downloadPDFFileFromBytes(resultBytes, `${formData.id != '' ? parseLicensePlate(formData.id) : 'presupuesto'}_${parseDate(formData.date)}`)
+  downloadPDFFileFromBytes(resultBytes, `${formData.id != '' ? parseLicensePlate(formData.id) : 'presupuesto'}_${parseDate(formData.date)}.pdf`)
 }
 
 function fillFormWithFormData(formData: any, form:any){
