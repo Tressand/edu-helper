@@ -4,10 +4,9 @@
   "main": "./app/index.tsx",
   "scripts": {
     "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
     "web": "expo start --web",
-    "build": "eas build -p android --profile development"
+    "build": "eas build -p android --profile development --local"
   },
   "dependencies": {
     "@expo/metro-runtime": "~4.0.1",
