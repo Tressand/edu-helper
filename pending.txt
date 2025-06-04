@@ -1,6 +1,7 @@
 Rework visual
 Más espacios de repuestos
 Quitar máximo de hoja o crear de forma adaptativa
+Días/Paños con botón incrementador
 
 Parte 2: Galería de contactos.
 Parte 3: Galería de imágenes.

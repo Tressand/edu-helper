@@ -1,44 +1,115 @@
-import { StatusBar, Platform, StyleSheet, ColorSchemeName } from "react-native"
+import { CSSProperties } from "react"
+import { StatusBar, Platform, StyleSheet, ColorSchemeName, ViewStyle, TextStyle, ImageStyle } from "react-native"
 
 type Theme = {
-  background:string,
-  accent_1:string,
-  accent_2:string,
-  shadow_1:string,
-  text: string,
-  warning:string
+  white:string,
+  gray:string,
+  black:string,
+  shadows:string,
+  green:ColorPalette,
+  red:ColorPalette,
+  cyan:ColorPalette,
+  magenta:ColorPalette,
+  text:string,
+  success:string,
+  failure:string,
+}
+
+export type ColorPalette = {
+  primary:string,
+  secondary:string,
+  accent:string,
 }
 
 const lightTheme : Theme = {
-  background: 'rgb(249, 247, 247)',
-  accent_1: 'rgba(88, 128, 178, 0.7)',
-  accent_2: 'rgba(17, 45, 78, 0.7)',
-  shadow_1: 'rgb(219, 226, 239)',
-  text : 'rgb(27, 38, 44)',
-  warning: 'rgb(187, 0, 0)'
+  white:'#FFFFFF',
+  gray:'#9f9f9f',
+  black:'#2f2f2f',
+  shadows:'#000000',
+  green:{
+    primary: '#74c250',
+    secondary: '#5f9f41',
+    accent: '#94ff62'
+  },
+  red:{
+    primary: '#e44244',
+    secondary: '#be3537',
+    accent: '#ff4c4f'
+  },
+  cyan:{
+    primary: '#47ace3',
+    secondary: '#4594ce',
+    accent: '#1b6bff'
+  },
+  magenta:{
+    primary: '#7f62ff',
+    secondary: '#6f58d9',
+    accent: '#5438d7'
+  },
+  text:'#FFFFFF',
+  success:'#2de32d',
+  failure:'#f32828',
 }
 
 const darkTheme : Theme = {
-  background: 'rgb(27, 38, 44)',
-  accent_1: 'rgba(111, 173, 213, 0.2)',
-  accent_2: 'rgba(15, 76, 117, 0.2)',
-  shadow_1: 'rgb(51, 72, 83)',
-  text : 'rgb(249, 247, 247)',
-  warning: 'rgb(255, 81, 81)'
+  white:'#FFFFFF',
+  gray:'#9f9f9f',
+  black:'#2f2f2f',
+  shadows:'#000000',
+  green:{
+    primary: '#74c250',
+    secondary: '#5f9f41',
+    accent: '#94ff62'
+  },
+  red:{
+    primary: '#e44244',
+    secondary: '#be3537',
+    accent: '#ff4c4f'
+  },
+  cyan:{
+    primary: '#47ace3',
+    secondary: '#4594ce',
+    accent: '#1b6bff'
+  },
+  magenta:{
+    primary: '#7f62ff',
+    secondary: '#6f58d9',
+    accent: '#5438d7'
+  },
+  text:'#FFFFFF',
+  success:'#2de32d',
+  failure:'#f32828',
 }
 
 export const getColors : ((arg0:ColorSchemeName) => Theme) = (color:ColorSchemeName) => color === 'light' ? lightTheme : darkTheme
 
 export default function getGlobalStyles (color:ColorSchemeName) {
   const colors = getColors(color)
+
+  type Style = ViewStyle | TextStyle | ImageStyle | any
+  const input_box_style: Style = {
+    width:'100%',
+    color:colors.text,
+    textAlign: 'center',
+    marginVertical: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    fontSize: 20,
+    borderRadius: 15,
+  }
+
   return StyleSheet.create({
     page: {
       flex:1,
       width: '100%',
       alignItems: 'center',
-      backgroundColor: colors.background,
       paddingTop: Platform.OS === 'android' || Platform.OS === 'ios' ? StatusBar.currentHeight/2 : 0,
-      paddingHorizontal: 10
+    },
+    section: {
+      width: '100%',
+      alignItems: 'center',
+      paddingHorizontal: 35,
+      paddingVertical: 10
     },
     scroll_container: {
       height: 'auto',
@@ -46,28 +117,19 @@ export default function getGlobalStyles (color:ColorSchemeName) {
       alignSelf:'center',
       maxWidth: 500,
     },
-    field: {
-      flex: 1,
-      flexDirection: 'row'
-    },
     title: {
       color: colors.text,
-      fontSize: 25,
-      alignSelf: 'center'
+      fontSize:30,
+      alignSelf: 'center',
+      marginVertical:12
     },
-    input_box: {
-      color:colors.text,
-      borderColor: colors.shadow_1,
-      textAlign: 'center',
-      backgroundColor: colors.accent_1,
-      marginVertical: 10,
-      paddingHorizontal: 18,
-      paddingVertical: 10,
-      fontSize: 18,
-      borderRadius: 25,
-      borderWidth: 1, 
+    input_box: input_box_style,
+    item_list_input_box: {
+      ...input_box_style,
+
     },
     date_input_box: {
+      ...input_box_style,
       flex:3,
       height:40,
       paddingRight: 10,
@@ -76,10 +138,37 @@ export default function getGlobalStyles (color:ColorSchemeName) {
       fontStyle: 'normal',
       fontWeight: 'medium'
     },
+    multiline: {
+      height: 200,
+      paddingVertical: 10,
+      overflow: 'hidden',
+      textAlignVertical:'top',
+      textAlign: 'left',
+      alignSelf: 'stretch'
+    },
+    button: {
+      ...input_box_style,
+      width:'auto'
+    },
+    button_label:{
+      color: colors.text,
+      fontSize:20,
+      fontWeight:'bold',
+      alignSelf: 'center',
+      marginVertical:5
+    },
+    big_button: {
+      color: colors.text,
+      fontSize:30,
+      alignSelf: 'center',
+      marginVertical:12,
+      width:'100%'
+    },
     multiple_input_container: {
+      display:'flex',
       flexDirection: 'row',
+      alignItems: 'center',
       height: 50,
-      paddingVertical:0
     },
     evenly_divided_input: {
       color:colors.text,
@@ -99,34 +188,23 @@ export default function getGlobalStyles (color:ColorSchemeName) {
     },
     double_input_left: {
       color:colors.text,
-      flex: 1,
-      paddingLeft:5,
-      borderRightColor: colors.shadow_1,
-      borderRightWidth: 1
+      flexGrow:1,
+      height:'100%',
+      paddingHorizontal: 15,
+      borderTopLeftRadius:15,
+      borderBottomLeftRadius:15,
     },
     double_input_right: {
       color:colors.text,
-      width:70,
-      paddingLeft:5,
-      textAlign: 'center'
+      width:'30%',
+      height:'100%',
+      paddingHorizontal: 15,
+      borderTopRightRadius:15,
+      borderBottomRightRadius:15,
     },
     small_img: {
       height: 45,
       width: 45,
-      borderRadius:25,
-      backgroundColor: color == 'dark' ? colors.shadow_1: 'transparent',
-    },
-    multiline: {
-      height: 200,
-      paddingVertical: 10,
-      overflow: 'hidden',
-      textAlignVertical:'top',
-      textAlign: 'left',
-      alignSelf: 'stretch'
-    },
-    button: {
-      backgroundColor: colors.accent_2,
-      marginBottom: 10,
     },
     button_add: {
       height: 'auto',
@@ -138,7 +216,7 @@ export default function getGlobalStyles (color:ColorSchemeName) {
       color:colors.text,
     },
     warning: {
-      color: colors.warning,
+      color: colors.failure,
       textAlign:'center',
       fontSize: 20,
       fontWeight: 'bold',
