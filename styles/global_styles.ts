@@ -1,4 +1,3 @@
-import { CSSProperties } from "react"
 import { StatusBar, Platform, StyleSheet, ColorSchemeName, ViewStyle, TextStyle, ImageStyle } from "react-native"
 
 type Theme = {
@@ -89,11 +88,9 @@ export default function getGlobalStyles (color:ColorSchemeName) {
   type Style = ViewStyle | TextStyle | ImageStyle | any
   const input_box_style: Style = {
     width:'100%',
+    height:50,
     color:colors.text,
     textAlign: 'center',
-    marginVertical: 10,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
     fontSize: 20,
     borderRadius: 15,
   }
@@ -103,6 +100,7 @@ export default function getGlobalStyles (color:ColorSchemeName) {
       flex:1,
       width: '100%',
       alignItems: 'center',
+      minWidth:480,
       paddingTop: Platform.OS === 'android' || Platform.OS === 'ios' ? StatusBar.currentHeight/2 : 0,
     },
     section: {
@@ -114,8 +112,7 @@ export default function getGlobalStyles (color:ColorSchemeName) {
     scroll_container: {
       height: 'auto',
       width: '100%',
-      alignSelf:'center',
-      maxWidth: 500,
+      alignSelf:'center'
     },
     title: {
       color: colors.text,
@@ -140,7 +137,6 @@ export default function getGlobalStyles (color:ColorSchemeName) {
     },
     multiline: {
       height: 200,
-      paddingVertical: 10,
       overflow: 'hidden',
       textAlignVertical:'top',
       textAlign: 'left',
@@ -148,14 +144,17 @@ export default function getGlobalStyles (color:ColorSchemeName) {
     },
     button: {
       ...input_box_style,
-      width:'auto'
+      justifyContent:'center',
+      width:'auto',
+      height:'auto',
+      padding:10
     },
     button_label:{
       color: colors.text,
+      textAlignVertical:'center',
+      textAlign:'center',
       fontSize:20,
       fontWeight:'bold',
-      alignSelf: 'center',
-      marginVertical:5
     },
     big_button: {
       color: colors.text,
@@ -165,31 +164,16 @@ export default function getGlobalStyles (color:ColorSchemeName) {
       width:'100%'
     },
     multiple_input_container: {
+      ...input_box_style,
       display:'flex',
+      flexGrow:1,
       flexDirection: 'row',
-      alignItems: 'center',
-      height: 50,
-    },
-    evenly_divided_input: {
-      color:colors.text,
-      flex: 1,
-      width: '25%',
-      textAlign: 'center',
-    },
-    double_container: {
-      height:'auto',
-      paddingVertical:0,
-      flexDirection: 'column'
-    },
-    secondary_double_container: {
-      fontSize: 18,
-      paddingVertical:5,
-      textAlign:'center'
     },
     double_input_left: {
       color:colors.text,
       flexGrow:1,
       height:'100%',
+      borderRightWidth: 3,
       paddingHorizontal: 15,
       borderTopLeftRadius:15,
       borderBottomLeftRadius:15,
@@ -211,6 +195,31 @@ export default function getGlobalStyles (color:ColorSchemeName) {
       width: 100,
       alignSelf: 'center',
       alignItems: 'center'
+    },
+    double_container: {
+      height:'auto',
+      paddingVertical:0,
+      flexDirection: 'column'
+    },
+    evenly_divided_input: {
+      ...input_box_style,
+      width:'25%',
+      borderRadius:0,
+      borderWidth: 3,
+      borderColor:'transparent'
+    },
+    total_container: { 
+      ...input_box_style,
+      borderTopLeftRadius:0,
+      borderTopRightRadius:0,
+      borderWidth:3,
+      fontSize:30,
+      borderColor:'transparent',
+    },
+    secondary_double_container: {
+      fontSize: 18,
+      paddingVertical:5,
+      textAlign:'center'
     },
     text: {
       color:colors.text,

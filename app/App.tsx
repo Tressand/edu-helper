@@ -1,42 +1,29 @@
-import React, { useState } from 'react'
+import React from 'react'
 import { StatusBar } from 'expo-status-bar';
-import { Text, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { useColorScheme, View, Text, Linking } from 'react-native';
 import Form from '../components/Form'
-import getGlobalStyles from '../styles/global_styles';
+import getGlobalStyles, { getColors } from '../styles/global_styles';
 
-export const version = 'v1.4'
-
-let current = "other"
-
-const pages = {
-  "form" : Form,
-  "other": OtherPage
-}
-
-type setState<Type> =  [Type, React.Dispatch<React.SetStateAction<Type>>]
-
-type PageData = {
-  name:string,
-  props:any
-}
+export const version = 'v1.5'
 
 export default function App() {
   const global_styles = getGlobalStyles(useColorScheme())
-  const [currentPage, setCurrentPage] : setState<PageData> = useState({name: 'form', props:{}})
+  const colors = getColors(useColorScheme())
+
   return (
     <View style={[global_styles.page]}>
-      {console.log(currentPage)}
-      {pages[currentPage.name]({...currentPage.props, router:setCurrentPage})}
+      <Form></Form>
       <StatusBar></StatusBar>
     </View>
-  );
+  )
 }
 
-function OtherPage(props) {
-  return(
-    <View>
-      <Text>PORONGO</Text>
-      <TouchableOpacity style={{width:100, height:100, backgroundColor:'black'}} onPress={() => {props.router({name: 'form', props: {}})}}></TouchableOpacity>
+export function AppInfoStrip({colors}) {
+  return (
+    <View style={{width:'100%',flexDirection:'row', backgroundColor:colors.black}}>
+      <Text style={{color:colors.white, paddingLeft:15}}>Creador de Presupuestos Edu-Helper {version}  |  Hecho por </Text>
+      <Text style={{color:'rgb(39, 104, 255)'}} onPress={() => {Linking.openURL('https://www.linkedin.com/in/g-mo/')}}>Gero</Text>
+      <Text style={{color:colors.white}}> {'<'}3</Text>
     </View>
   )
 }

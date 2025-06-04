@@ -1,12 +1,12 @@
 // #region IMPORTS
 
 import React, { useState } from 'react'
-import { Text, View, ScrollView, TouchableOpacity, TextInput, Image, Platform, SafeAreaView, useColorScheme} from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity, TextInput, Image, Platform, SafeAreaView, useColorScheme, KeyboardAvoidingView, Linking} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker'
 import createBudgetDocument from '../utils/pdfHandler';
 import { parsePhoneNumber, parsePrice, parseLicensePlate, priceToNumber, parsePercentage, percentageToNumber, parseNumber } from '../utils/parsers';
 import getGlobalStyles, { getColors, ColorPalette } from '../styles/global_styles';
-import { version } from '../app/App';
+import { AppInfoStrip, version } from '../app/App';
 
 // #endregion
 
@@ -59,10 +59,10 @@ const mockData = {
     id: 'AA123BB',
     extra: 'Algunas observaciones adicionales',
     locations: 'Paragolpes delantero, puerta trasera',
-    workCost: '$150.000',
-    paintCost: '$80.000',
+    workCost: '$252.000',
+    paintCost: '$392.000',
     mechanicCost: '$50.000',
-    total:'',
+    total:'$844.000',
     date: new Date(),
     page:'1',
     total_pages:'1'
@@ -285,23 +285,89 @@ export default function Form(props) {
     const palette: ColorPalette = colors[props.color ??= 'green']
 
     return (
-      <>
+      <KeyboardAvoidingView behavior='padding'
+      style={[
+        global_styles.input_box,
+        props.multiline ? global_styles.multiline : {},
+        {backgroundColor:palette.secondary, marginVertical:10}
+      ]}>
         <TextInput
           value={props.formatter(formData[props.value])}
           onChangeText={props.updater}
-          style = {[global_styles.input_box,
-            props.multiline ? global_styles.multiline : {},
-          {backgroundColor:palette.secondary}]}
+          style = {[
+            global_styles.input_box,
+            props.multiline ? {...global_styles.multiline, padding:15} : {},
+          ]}
           placeholder={props.placeholder}
           multiline={props.multiline}
           placeholderTextColor={colors.text}
           keyboardType={props.keyboardType}
         />
-      </>
+      </KeyboardAvoidingView>
+    )
+  }
+
+  function CostObjectComponent({ label, object, setter, value }){
+    return (
+      <View style={[global_styles.input_box, {height:'auto', marginVertical:10}]}>
+        <View style={[global_styles.multiple_input_container, {backgroundColor:colors.magenta.secondary, borderBottomLeftRadius:0, borderBottomRightRadius:0}]}>
+          <TextInput
+            value = {label}
+            editable = {false}
+            style = {[global_styles.evenly_divided_input, {fontWeight: 'bold', borderTopLeftRadius:15, backgroundColor:colors.magenta.accent}]}
+          />
+          <TextInput
+            value = {object.perUnit}
+            style = {global_styles.evenly_divided_input}
+            placeholderTextColor={colors.text}
+            keyboardType='number-pad'
+            placeholder='$/Día'
+            onChangeText={(text) => {
+              setCostObjectValue(object, setter, 'perUnit', parsePrice(text))
+            }}
+          />
+          <TextInput
+            value = {object.units}
+            keyboardType='number-pad'
+            style = {[
+              global_styles.evenly_divided_input, 
+              {
+                borderLeftColor: colors.magenta.primary, 
+                borderRightColor: colors.magenta.primary
+              }
+            ]}
+            placeholderTextColor={colors.text}
+            placeholder='Días'
+            onChangeText={(text) => {
+              setCostObjectValue(object, setter, 'units', text)
+            }}
+          />
+          <TextInput
+            value = {object.percentage}
+            keyboardType='number-pad'
+            style = {global_styles.evenly_divided_input}
+            placeholderTextColor={colors.text}
+            placeholder='%'
+            onChangeText={(text) => {
+              setCostObjectValue(object, setter, 'percentage', parsePercentage(text))
+            }}
+          />
+        </View>
+        <TextInput
+          value={formData[value]}
+          editable={false}
+          style={[global_styles.total_container, {
+            backgroundColor:colors.magenta.secondary,
+            borderTopColor:colors.magenta.primary
+          }]}
+        />
+      </View>
     )
   }
 
   // #endregion
+
+  // #region PAGE
 
   return (
     <SafeAreaView style={[global_styles.page]}>
@@ -374,11 +440,11 @@ export default function Form(props) {
         <View style={[global_styles.section, {backgroundColor: colors.cyan.primary}]}>
           <Text style={global_styles.title}>Repuestos a Cambiar</Text>
           { ids.map((id) =>
-              <View key={'elem' + id} style={[global_styles.multiple_input_container, {width:'100%', marginVertical:10}]}>
-                <View style={[global_styles.multiple_input_container, {borderRadius:15, flexGrow:1, backgroundColor:colors.cyan.secondary}]}>
+              <View key={'elem' + id} style={[global_styles.multiple_input_container, {marginVertical:10}]}>
+                <View style={[global_styles.multiple_input_container, {width:'auto', backgroundColor:colors.cyan.secondary}]}>
                   <TextInput
                     value={getValue(id) != undefined ? getValue(id).name : ''}
-                    style = {global_styles.double_input_left}
+                    style = {[global_styles.double_input_left, {borderRightColor: colors.cyan.primary}]}
                     placeholderTextColor={colors.text}
                     placeholder='Item'
                     onChangeText={(text) => setName(id, text)}
@@ -393,7 +459,7 @@ export default function Form(props) {
                   />
                 </View>
                 <TouchableOpacity 
-                  style={[global_styles.small_img, {marginLeft: 10}]}
+                  style={[global_styles.small_img, {alignSelf:'center', marginLeft: 10}]}
                   onPress={() => removeItem(id)}
                 >
                   <Image source={require('../assets/basura.png')} style = {global_styles.small_img} />
@@ -411,118 +477,30 @@ export default function Form(props) {
         {/* MAGENTA SECTION */}
         <View style={[global_styles.section, {backgroundColor: colors.magenta.primary}]}>
           <Text style={global_styles.title}>Mano de Obra</Text>
-          <View style={[global_styles.input_box, global_styles.double_container]}>
-            <View style={[global_styles.multiple_input_container]}>
-              <TextInput
-                value = 'Chapa'
-                editable = {false}
-                style = {[global_styles.evenly_divided_input, {fontSize: 20}]}
-              />
-              <TextInput
-                value = {workCostObject.perUnit}
-                style = {global_styles.evenly_divided_input}
-                placeholderTextColor={colors.text}
-                keyboardType='number-pad'
-                placeholder='$/Día'
-                onChangeText={(text) => {
-                  setCostObjectValue(workCostObject, setWorkCostObject, 'perUnit', parsePrice(text))
-                }}
-              />
-              <TextInput
-                value = {workCostObject.units}
-                keyboardType='number-pad'
-                style = {[
-                  global_styles.evenly_divided_input, 
-                  {
-                    borderLeftColor: 'gray', 
-                    borderRightColor: 'gray'
-                  }
-                ]}
-                placeholderTextColor={colors.text}
-                placeholder='Días'
-                onChangeText={(text) => {
-                  setCostObjectValue(workCostObject, setWorkCostObject, 'units', text)
-                }}
-              />
-              <TextInput
-                value = {workCostObject.percentage}
-                keyboardType='number-pad'
-                style = {global_styles.evenly_divided_input}
-                placeholderTextColor={colors.text}
-                placeholder='%'
-                onChangeText={(text) => {
-                  setCostObjectValue(workCostObject, setWorkCostObject, 'percentage', parsePercentage(text))
-                }}
-              />
-            </View>
-            <TextInput
-              value={formData.workCost}
-              editable={false}
-              style={[global_styles.secondary_double_container, global_styles.text]}
-            />
-          </View>
-          <View style={[global_styles.input_box, global_styles.double_container]}>
-            <View style={[global_styles.multiple_input_container]}>
-              <TextInput
-                value = 'Pintura'
-                editable = {false}
-                style = {[global_styles.evenly_divided_input, {fontSize: 20}]}
-              />
-              <TextInput
-                value = {paintCostObject.perUnit}
-                style = {global_styles.evenly_divided_input}
-                placeholderTextColor={colors.text}
-                keyboardType='number-pad'
-                placeholder='$/Paño'
-                onChangeText={(text) => {
-                  setCostObjectValue(paintCostObject, setPaintCostObject, 'perUnit', parsePrice(text))
-                }}
-              />
-              <TextInput
-                value = {paintCostObject.units}
-                keyboardType='number-pad'
-                style = {[
-                  global_styles.evenly_divided_input, 
-                  {
-                    borderLeftColor: 'gray', 
-                    borderRightColor: 'gray'
-                  }
-                ]}
-                placeholderTextColor={colors.text}
-                placeholder='Paños'
-                onChangeText={(text) => {
-                  setCostObjectValue(paintCostObject, setPaintCostObject, 'units', text)
-                }}
-              />
-              <TextInput
-                value = {paintCostObject.percentage}
-                keyboardType='number-pad'
-                style = {global_styles.evenly_divided_input}
-                placeholderTextColor={colors.text}
-                placeholder='%'
-                onChangeText={(text) => {
-                  setCostObjectValue(paintCostObject, setPaintCostObject, 'percentage', parsePercentage(text))
-                }}
-              />
-            </View>
-            <TextInput
-              value={formData.paintCost}
-              editable={false}
-              style={[global_styles.secondary_double_container, global_styles.text]}
-            />
-          </View>
-          <View style={[global_styles.input_box, global_styles.multiple_input_container]}>
+          {CostObjectComponent({label:'Chapa', object:workCostObject, setter:setWorkCostObject, value:'workCost'})}
+          {CostObjectComponent({label:'Pintura', object:paintCostObject, setter:setPaintCostObject, value:'paintCost'})}
+          <View style={[global_styles.multiple_input_container, {marginVertical:10}]}>
             <TextInput
               value = 'Mecánica'
               editable = {false}
-              style = {[global_styles.text, {fontSize: 20, width:'25%', textAlign:'center'}]}
+              style = {[global_styles.evenly_divided_input,
+                {
+                  fontWeight: 'bold',
+                  backgroundColor:colors.magenta.accent,
+                  borderTopLeftRadius:15,
+                  borderBottomLeftRadius:15
+                }]}
               placeholderTextColor={colors.text}
               placeholder='Item'
             />
             <TextInput
               value={formData.mechanicCost}
               keyboardType='number-pad'
-              style = {[global_styles.text, {textAlign:'center', width:'75%'}]}
+              style = {[global_styles.evenly_divided_input, {
+                backgroundColor:colors.magenta.secondary,
+                borderTopRightRadius:15,
+                borderBottomRightRadius:15
+              }]}
               placeholderTextColor={colors.text}
               placeholder='Precio'
               onChangeText={(text) => {
@@ -531,27 +509,41 @@ export default function Form(props) {
               }}
             />
           </View>
-          <View style={[global_styles.input_box, global_styles.multiple_input_container]}>
+          <View style={[global_styles.multiple_input_container, {marginVertical:10}]}>
             <TextInput
               value = 'Total'
               editable = {false}
-              style = {[global_styles.text, {fontSize: 20, width:'25%', textAlign:'center'}]}
+              style = {[global_styles.evenly_divided_input,
+                {
+                  fontWeight: 'bold',
+                  backgroundColor:colors.magenta.accent,
+                  borderTopLeftRadius:15,
+                  borderBottomLeftRadius:15
+                }]}
               placeholderTextColor={colors.text}
               placeholder='Item'
             />
             <TextInput
               value={formData.total}
               editable={false}
-              style = {[global_styles.text, {textAlign:'center', width:'75%', fontWeight:'bold', fontSize:20}]}
+              style = {[global_styles.evenly_divided_input, {
+                width:'75%',
+                fontWeight:'bold',
+                fontSize:30,
+                backgroundColor:colors.magenta.secondary,
+                borderTopRightRadius:15,
+                borderBottomRightRadius:15
+              }]}
             />
           </View>
         </View>
         {/* SUBMIT BUTTON */}
-        <TouchableOpacity style={[global_styles.input_box, {backgroundColor:colors.success, margin: 0, borderRadius:0, paddingVertical:20}]} onPress={submit}>
-          <Text style={[global_styles.title, {color: '#FAFAFA'}]}>CREAR PRESUPUESTO</Text>
+        <TouchableOpacity style={[global_styles.button, {backgroundColor:colors.success, borderRadius:0, paddingVertical:25}]} onPress={submit}>
+          <Text style={[global_styles.title]}>CREAR PRESUPUESTO</Text>
         </TouchableOpacity>
-        <Text style={global_styles.text}>{version} | Hecho por Gero {'<'}3</Text>
+        <AppInfoStrip colors={colors}></AppInfoStrip>
       </ScrollView>
     </SafeAreaView>
   )
+  // #endregion
 }
