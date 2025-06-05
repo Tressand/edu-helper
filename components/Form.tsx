@@ -3,10 +3,10 @@
 import React, { useState } from 'react'
 import { Text, View, ScrollView, TouchableOpacity, TextInput, Image, Platform, SafeAreaView, useColorScheme, KeyboardAvoidingView, Linking} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker'
-import createBudgetDocument from '../utils/pdfHandler';
+import { createBudgetDocument } from '../utils/pdfHandler';
 import { parsePhoneNumber, numberToPrice, parseLicensePlate, priceToNumber, numberToPercentage, percentageToNumber, numberToFormat, parsePrefixedNumber, formatToNumber } from '../utils/parsers';
 import getGlobalStyles, { getColors, ColorPalette } from '../styles/global_styles';
-import { AppInfoStrip, version } from '../app/App';
+import AppInfoStrip from './AppInfoStrip';
 
 // #endregion
 
@@ -244,8 +244,8 @@ export default function Form({ navigation }) {
     <>
       { Platform.OS != 'web' ? 
         (
-          <TouchableOpacity style={[global_styles.input_box, {width:'40%', backgroundColor:colors.white}]} onPress={() => setShowDatePicker(true)} >
-            <Text style = {[{textAlign: 'center', fontSize: 18, color:colors.black}]}> {formData.date.toLocaleDateString()} </Text>
+          <TouchableOpacity style={[global_styles.input_box, {width:'40%',alignItems:'center', backgroundColor:colors.white}]} onPress={() => setShowDatePicker(true)} >
+            <Text style = {[{height:'100%', textAlignVertical: 'center', fontSize: 18, color:colors.black}]}> {formData.date.toLocaleDateString()} </Text>
             { showDatePicker && (
               <DateTimePicker
                 testID="dateTimePicker"
@@ -356,7 +356,7 @@ export default function Form({ navigation }) {
             style = {global_styles.evenly_divided_input}
             placeholderTextColor={colors.text}
             keyboardType='number-pad'
-            placeholder='$/Día'
+            placeholder={`$/${value == 'workCost' ? 'Día' : 'Paño'}`}
             onChangeText={(text) => {
               setCostObjectValue(object, setter, 'perUnit', priceToNumber(text))
             }}
@@ -368,11 +368,13 @@ export default function Form({ navigation }) {
               global_styles.evenly_divided_input, 
               {
                 borderLeftColor: colors.magenta.primary, 
-                borderRightColor: colors.magenta.primary
+                borderRightColor: colors.magenta.primary,
+                borderTopWidth:0,
+                borderBottomWidth:0,
               }
             ]}
             placeholderTextColor={colors.text}
-            placeholder='Días'
+            placeholder={value == 'workCost' ? 'Días' : 'Paños'}
             onChangeText={(text) => {
               setCostObjectValue(object, setter, 'units', formatToNumber(text))
             }}
@@ -393,7 +395,10 @@ export default function Form({ navigation }) {
           editable={false}
           style={[global_styles.total_container, {
             backgroundColor:colors.magenta.secondary,
-            borderTopColor:colors.magenta.primary
+            borderTopColor:colors.magenta.primary,
+            borderLeftWidth:0,
+            borderBottomWidth:0,
+            borderRightWidth:0
           }]}
         />
       </View>
@@ -405,9 +410,9 @@ export default function Form({ navigation }) {
   // #region PAGE
 
   return (
-    <SafeAreaView style={[global_styles.page]}>
+    <SafeAreaView style={[global_styles.page, {height:'100%'}]}>
       <ScrollView 
-        style={global_styles.scroll_container}
+        style={[global_styles.scroll_container]}
         showsVerticalScrollIndicator={false}
       >
         {/* HEADER */}
@@ -460,8 +465,8 @@ export default function Form({ navigation }) {
                 { 
                   ItemListDivisoryLine({index: index, length:list.length})
                 }
-                <View style={[global_styles.multiple_input_container, {marginVertical:10}]}>
-                  <View style={[global_styles.multiple_input_container, {width:'auto', backgroundColor:colors.cyan.secondary}]}>
+                <View style={[global_styles.multiple_input_container, {width: '100%', paddingHorizontal: 25, marginVertical:10}]}>
+                  <View style={[global_styles.multiple_input_container, {backgroundColor:colors.cyan.secondary}]}>
                     <TextInput
                       value={getItemPairFromID(id)?.name ?? ''}
                       style = {[global_styles.double_input_left, {borderRightColor: colors.cyan.primary}]}
@@ -550,7 +555,7 @@ export default function Form({ navigation }) {
                 fontSize:30,
                 backgroundColor:colors.magenta.secondary,
                 borderTopRightRadius:15,
-                borderBottomRightRadius:15
+                borderBottomRightRadius:15,
               }]}
             />
           </View>

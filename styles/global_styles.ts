@@ -97,11 +97,9 @@ export default function getGlobalStyles (color:ColorSchemeName) {
 
   return StyleSheet.create({
     page: {
-      flex:1,
       width: '100%',
       alignItems: 'center',
-      minWidth:480,
-      paddingTop: Platform.OS === 'android' || Platform.OS === 'ios' ? StatusBar.currentHeight/2 : 0,
+      paddingTop: Platform.OS === 'android' || Platform.OS === 'ios' ? StatusBar.currentHeight : 0,
     },
     section: {
       width: '100%',
@@ -166,12 +164,11 @@ export default function getGlobalStyles (color:ColorSchemeName) {
     multiple_input_container: {
       ...input_box_style,
       display:'flex',
-      flexGrow:1,
       flexDirection: 'row',
     },
     double_input_left: {
       color:colors.text,
-      flexGrow:1,
+      width: '65%',
       height:'100%',
       borderRightWidth: 3,
       paddingHorizontal: 15,
@@ -180,7 +177,7 @@ export default function getGlobalStyles (color:ColorSchemeName) {
     },
     double_input_right: {
       color:colors.text,
-      width:'30%',
+      width:'45%',
       height:'100%',
       paddingHorizontal: 15,
       borderTopRightRadius:15,
@@ -206,6 +203,7 @@ export default function getGlobalStyles (color:ColorSchemeName) {
       width:'25%',
       borderRadius:0,
       borderWidth: 3,
+      fontSize:15,
       borderColor:'transparent'
     },
     total_container: { 
@@ -213,7 +211,7 @@ export default function getGlobalStyles (color:ColorSchemeName) {
       borderTopLeftRadius:0,
       borderTopRightRadius:0,
       borderWidth:3,
-      fontSize:30,
+      fontSize:25,
       borderColor:'transparent',
     },
     secondary_double_container: {

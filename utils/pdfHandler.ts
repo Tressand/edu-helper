@@ -34,7 +34,7 @@ async function fetchPdfAssetFromModule(module: any) {
   return bytes
 }
 
-export default async function createBudgetDocument(formData: PagedPDFBudgetData) {
+export async function createBudgetDocument(formData: PagedPDFBudgetData) {
   // Load Form
   const bytes = await fetchPdfAssetFromModule(budget_template)
   const pdf = await PDFDocument.load(bytes)
@@ -49,7 +49,33 @@ export default async function createBudgetDocument(formData: PagedPDFBudgetData)
   downloadPDFFileFromBytes(resultBytes, 
     `${formData.id != '' ? `[${parseLicensePlate(formData.id)}]` : 'presupuesto'}_`+
     `${dateToFormat(formData.date)}`+
-    (formData.totalPages > 1 ? `_(${formData.page}-${formData.totalPages}).pdf` : "")
+    (formData.totalPages > 1 ? `_(${formData.page}-${formData.totalPages})` : "" + ".pdf")
+  )
+}
+export async function createPagedBudgetDocument(formDatas: PagedPDFBudgetData[]){
+  // Load Form
+  const result = await PDFDocument.create()
+  const bytes = await fetchPdfAssetFromModule(budget_template)
+
+  for (let i = 0; i < formDatas.length; i++) {
+    const data = formDatas[i];
+    const doc = await PDFDocument.load(bytes)
+    const form = doc.getForm()
+    
+    fillFormWithFormData(data, form)
+    
+    const page = await result.copyPages(doc, [0])
+
+    result.insertPage(i, page[0])
+  }
+
+  // Save PDF to byte array
+  const resultBytes = await result.save()
+  
+  const formData = formDatas[0]
+  downloadPDFFileFromBytes(resultBytes, 
+    `${formData.id != '' ? `[${parseLicensePlate(formData.id)}]` : 'presupuesto'}_`+
+    `${dateToFormat(formData.date)}`
   )
 }
 

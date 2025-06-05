@@ -1,6 +1,6 @@
 import { TouchableOpacity, useColorScheme, View, Text } from "react-native";
 import getGlobalStyles, { getColors } from "../styles/global_styles";
-import createBudgetDocument from "../utils/pdfHandler";
+import { createBudgetDocument, createPagedBudgetDocument } from "../utils/pdfHandler";
 import { useEffect, useState } from "react";
 import { PDFBudgetData } from "./Form";
 import { numberToFormat } from "../utils/parsers";
@@ -43,12 +43,16 @@ export default function DownloadScreen({ route }) {
   }, [])
 
   return (
-    <View style={[global_styles.page, {paddingVertical:10,paddingHorizontal:25,backgroundColor:colors.magenta.primary}]}>
+    <View style={[global_styles.page, {height: '100%',paddingVertical:10,paddingHorizontal:25,backgroundColor:colors.magenta.primary}]}>
+      <TouchableOpacity style={[global_styles.input_box, {height:'auto', 
+        backgroundColor:colors.magenta.accent, marginVertical:20, paddingVertical:20}]} onPress={() => {createPagedBudgetDocument(files)}}>
+        <Text style={[global_styles.title, {fontSize:25, textAlign:'center', fontWeight:'bold'}]}>DESCARGAR DOCUMENTO COMPLETO</Text>
+      </TouchableOpacity>
       { 
         files.map(file =>
           <TouchableOpacity key={'elem' + file.page.toString()} style={[global_styles.input_box, {height:'auto', 
-          backgroundColor:colors.magenta.accent, marginVertical:10}]} onPress={() => {createBudgetDocument(file)}}>
-            <Text style={[global_styles.title]}>DESCARGAR HOJA {`(${numberToFormat(file.page)}/${numberToFormat(file.totalPages)})`}</Text>
+          backgroundColor:colors.magenta.secondary, marginVertical:10}]} onPress={() => {createBudgetDocument(file)}}>
+            <Text style={[global_styles.title, {fontSize:25, textAlign:'center'}]}>DESCARGAR PÁGINA {`(${numberToFormat(file.page)}/${numberToFormat(file.totalPages)})`}</Text>
           </TouchableOpacity>
         )
       }
