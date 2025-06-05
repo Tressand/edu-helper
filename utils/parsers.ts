@@ -33,8 +33,9 @@ export const parseLicensePlate = (id: string) => {
   return id
 }
 
-export const parseNumber = (value: string) => {
-  if(value == '') return ''
+export const numberToFormat = (num: number) => {
+  if(num == 0 || Number.isNaN(num)) return ''
+  const value = num.toString()
   const mantise = value.split(',')[1] ? (',' + value.split(',')[1]) : ''
   const parsedInt = value
   .replace(/[^\d,]/, '')
@@ -53,33 +54,36 @@ export const parseNumber = (value: string) => {
   return value.endsWith(',') ? parsedFloat + ',' : parsedFloat
 }
 
-const prefixedNumber = (prefix:string, value:string) => {
-  if (value == '' || value == prefix) return ''
-  const parsedFloat = parseNumber(value.replace(prefix,'').replace('.', ''))
-  return prefix + parsedFloat
+export const formatToNumber = (value: string) => {
+  const result = parseFloat(value.replace(/[.]/g,'').replace(',','.'))
+  return Number.isNaN(result) ? 0 : result
 }
 
-const prefixedNumberToNumber = (prefix: string, value:string) => {
-  return parseFloat(value.replace(prefix,'').replace(/[.]/g,'').replace(',','.'))
+const numberToPrefixed = (prefix:string, value:number) : string => {
+  return value == 0 || value == undefined ? '' : prefix + numberToFormat(value)
 }
 
-export const parsePrice = (price: string) => {
-  return prefixedNumber('$', price)
+export const parsePrefixedNumber = (prefix: string, value:string) : number => {
+  return value == '' || value == prefix ? 0 : parseFloat(value.replace(prefix,'').replace(/[.]/g,'').replace(',','.'))
+}
+
+export const numberToPrice = (price: number) => {
+  return numberToPrefixed('$', price)
 }
 
 export const priceToNumber = (price:string) => {
-  return prefixedNumberToNumber('$', price)
+  return parsePrefixedNumber('$', price)
 }
 
-export const parsePercentage = (value: string) => {
-  return prefixedNumber('%', value)
+export const numberToPercentage = (value: number) => {
+  return numberToPrefixed('%', value)
 }
 
 export const percentageToNumber = (value:string) => {
-  return prefixedNumberToNumber('%', value)
+  return parsePrefixedNumber('%', value)
 }
 
-export const parseDate = (date: Date) => {
+export const dateToFormat = (date: Date) => {
   return `${date.getDate() < 10 ? '0' + date.getDate(): date.getDate()}-${date.getMonth() < 10 ? '0' + date.getMonth(): date.getMonth()}-${date.getFullYear()}`
 }
 

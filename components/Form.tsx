@@ -4,7 +4,7 @@ import React, { useState } from 'react'
 import { Text, View, ScrollView, TouchableOpacity, TextInput, Image, Platform, SafeAreaView, useColorScheme, KeyboardAvoidingView, Linking} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker'
 import createBudgetDocument from '../utils/pdfHandler';
-import { parsePhoneNumber, parsePrice, parseLicensePlate, priceToNumber, parsePercentage, percentageToNumber, parseNumber } from '../utils/parsers';
+import { parsePhoneNumber, numberToPrice, parseLicensePlate, priceToNumber, numberToPercentage, percentageToNumber, numberToFormat, parsePrefixedNumber, formatToNumber } from '../utils/parsers';
 import getGlobalStyles, { getColors, ColorPalette } from '../styles/global_styles';
 import { AppInfoStrip, version } from '../app/App';
 
@@ -21,35 +21,46 @@ type FormDataObject = {
   id:string,
   extra:string,
   locations:string,
-  workCost:string,
-  paintCost:string,
-  mechanicCost:string,
-  total:string,
+  workCost:number,
+  paintCost:number,
+  mechanicCost:number,
+  total:number,
   date:Date,
-  page:string,
-  total_pages:string
 }
 
 type ItemList = {[key:string]:ItemPair}
 type ItemPair = {
   name: string,
-  value: string
+  value: number
 }
 
 type CostObject = {
-  units:string,
-  perUnit:string,
-  percentage:string,
-  setTotal:(arg0:FormDataObject, arg1:string)=>FormDataObject,
+  units:number,
+  perUnit:number,
+  percentage:number,
+  setTotal:(arg0:FormDataObject, arg1:number)=>FormDataObject,
 }
 
-type setState<Type> =  React.Dispatch<React.SetStateAction<Type>>
+export type PDFBudgetData = (FormDataObject & {
+  items: [...ItemPair[]],
+  days:number, sheets:number,
+  day:string,
+  month:string,
+  year:string
+})
+
+type stateSetter<Type> = React.Dispatch<React.SetStateAction<Type>>
+type setState<Type> =  [Type, stateSetter<Type>]
 
 // #endregion
 
 // #region CONSTS
 
-const mockData = {
+const mockData : {
+  formData:FormDataObject,
+  items:{[id:number]:ItemPair},
+  costObjects:{[id:string]:CostObject}
+} = {
   formData: {
     name: 'Juan Pérez',
     address: 'Av. Siempre Viva 742',
@@ -59,28 +70,46 @@ const mockData = {
     id: 'AA123BB',
     extra: 'Algunas observaciones adicionales',
     locations: 'Paragolpes delantero, puerta trasera',
-    workCost: '$252.000',
-    paintCost: '$392.000',
-    mechanicCost: '$50.000',
-    total:'$844.000',
-    date: new Date(),
-    page:'1',
-    total_pages:'1'
+    workCost: 252000,
+    paintCost: 392000,
+    mechanicCost: 50000,
+    total:844000,
+    date: new Date()
   },
   items: {
-    1: {name: 'Paragolpes delantero', value: '$100.000'},
-    2: {name: 'Puerta trasera', value: '$50.000'}
+    1: {name: 'Paragolpes delantero', value: 100000},
+    2: {name: 'Puerta trasera', value: 50000},
+    3: {name: 'Puerta trasera', value: 50000},
+    4: {name: 'Puerta trasera', value: 50000},
+    5: {name: 'Puerta trasera', value: 50000},
+    6: {name: 'Puerta trasera', value: 50000},
+    7: {name: 'Puerta trasera', value: 50000},
+    8: {name: 'Puerta trasera', value: 50000},
+    9: {name: 'Puerta trasera', value: 50000},
+    10: {name: 'Puerta trasera', value: 50000},
+    11: {name: 'Puerta trasera', value: 50000},
+    12: {name: 'Puerta trasera', value: 50000},
+    13: {name: 'Puerta trasera', value: 50000},
+    14: {name: 'Puerta trasera', value: 50000},
+    15: {name: 'Puerta trasera', value: 50000},
+    16: {name: 'Puerta trasera', value: 50000},
+    17: {name: 'Puerta trasera', value: 50000},
+    18: {name: 'Puerta trasera', value: 50000},
+    19: {name: 'Puerta trasera', value: 50000},
+    20: {name: 'Puerta trasera', value: 50000},
   },
   costObjects: {
     work: {
-      units:'2',
-      perUnit:'$140.000',
-      percentage:'%10',
+      units:2,
+      perUnit:140000,
+      percentage:10,
+      setTotal: (baseFormData, value: number) => {return {...baseFormData, workCost: value}}
     },
     paint: {
-      units:'7',
-      perUnit:'$70.000',
-      percentage:'%20',
+      units:7,
+      perUnit:70000,
+      percentage:20,
+      setTotal: (baseFormData, value: number) => {return {...baseFormData, paintCost: value}}
     }
   }
 }
@@ -94,41 +123,39 @@ const initialFormData : FormDataObject = {
   id: '',
   extra: '',
   locations: '',
-  workCost: '',
-  paintCost: '',
-  mechanicCost: '',
-  total:'',
-  date: new Date(),
-  page:'1',
-  total_pages:'1'
+  workCost: 0,
+  paintCost: 0,
+  mechanicCost: 0,
+  total:0,
+  date: new Date()
 }
 
 const emptyCostObject = {
-  units: '',
-  perUnit: '',
-  percentage: '',
+  units: 0,
+  perUnit: 0,
+  percentage: 0,
 }
 
 // #endregion
 
-export default function Form(props) {
+export default function Form({ navigation }) {
   // #region STATE
 
-  const [ids, setIds]: [[...number[]], setState<[...number[]]>] = useState([1,2,3,4])
-  const [formData, setFormData]: [FormDataObject, setState<FormDataObject>] = useState(initialFormData)
-  const [showDatePicker, setShowDatePicker]: [boolean, setState<boolean>] = useState(false)
-  const [itemList, setItemList]: [ItemList, setState<ItemList>] = useState({})
-  const [workCostObject, setWorkCostObject]: [CostObject, setState<CostObject>] = useState({
+  const [ids, setIds]: setState<[...number[]]> = useState([1,2,3,4])
+  const [formData, setFormData]: setState<FormDataObject> = useState(initialFormData)
+  const [showDatePicker, setShowDatePicker]: setState<Boolean> = useState(false)
+  const [itemList, setItemList]: setState<ItemList> = useState({})
+  const [workCostObject, setWorkCostObject]: setState<CostObject> = useState({
     ...emptyCostObject,
-    setTotal: (baseFormData, value: string) => {return {...baseFormData, workCost: value}}
+    setTotal: (baseFormData, value: number) => {return {...baseFormData, workCost: value}}
   })
-  const [paintCostObject, setPaintCostObject]: [CostObject, setState<CostObject>] = useState({
+  const [paintCostObject, setPaintCostObject]: setState<CostObject> = useState({
     ...emptyCostObject,
-    setTotal: (baseFormData, value: string) => {return {...baseFormData, paintCost: value}}
+    setTotal: (baseFormData, value: number) => {return {...baseFormData, paintCost: value}}
   })
-  const setCostObjectValue = (object: CostObject, setter: setState<CostObject>, key:string, value:string) => {
+  const setCostObjectValue = (object: CostObject, setter: stateSetter<CostObject>, key:string, value:number) => {
     const newCostObject: CostObject = {...object, [key]: value}
-    const totalPrice = priceCalculator(newCostObject)
+    const totalPrice = (newCostObject.perUnit * newCostObject.units) * (1 - (newCostObject.percentage/100))
     const newFormData = object.setTotal(formData, totalPrice)
     setter(newCostObject)
     updateTotal(newFormData, itemList)
@@ -138,7 +165,7 @@ export default function Form(props) {
   const colors = getColors(theme)
 
   const updateTotal = (formData:FormDataObject, items:ItemList) => {
-    setFormData({...formData, total:parsePrice(itemsTotal(formData, items).toString())})
+    setFormData({...formData, total:itemsTotal(formData, items)})
   }
 
   const addItem = () => {
@@ -148,7 +175,7 @@ export default function Form(props) {
   const removeItem = (id : number) => {
     let newItemList = {...itemList}
     if (ids.length == 1) {
-      newItemList[id] = {name: '', value: ''}
+      newItemList[id] = {name: '', value: 0}
       setItemList(newItemList)
       updateTotal(formData, newItemList)
       return
@@ -167,59 +194,45 @@ export default function Form(props) {
     })
   }
 
-  const setValue = (id : number, value: string) => {
+  const setValue = (id : number, value: number) => {
     const newItemList : {[key: string]: ItemPair} = {
       ...itemList,
       [id]: {name: itemList[id]?.name || '', value: value}
     }
     setItemList(newItemList)
-    setFormData({...formData, total:parsePrice(itemsTotal(formData, newItemList).toString())})
+    setFormData({...formData, total:itemsTotal(formData, newItemList)})
   }
 
-  const getValue = (id : number) => {
+  const getItemPairFromID = (id : number) => {
     return itemList[id]
   }
 
   const itemsTotal = (baseFormData: FormDataObject, itemList:{[key: string]: ItemPair}) => {
     let total = 0
     for (let i = 0; i < ids.length; i++) {
-      if(itemList[ids[i]]) total += priceToNumber(itemList[ids[i]].value)
+      if(itemList[ids[i]]) total += itemList[ids[i]].value
     }
-    if (baseFormData.workCost != '') total += priceToNumber(baseFormData.workCost)
-    if (baseFormData.paintCost != '') total += priceToNumber(baseFormData.paintCost)
-    if (baseFormData.mechanicCost != '') total += priceToNumber(baseFormData.mechanicCost)
+    total += baseFormData.workCost + baseFormData.paintCost + baseFormData.mechanicCost
     return total
-  }
-  
-  const priceCalculator = (object: CostObject) => {
-    if(object.perUnit == '' && object.units == '') return '$0'
-    const perUnitValue = object.perUnit == ''
-      ? 0
-      : priceToNumber(object.perUnit)
-    const unitsValue = object.units == ''
-      ? 0
-      : parseFloat(object.units.replace('.', '').replace(',','.'))
-    const percentageValue = object.percentage == '' 
-      ? 0
-      : percentageToNumber(object.percentage)
-    const finalValue = (perUnitValue * unitsValue) * (1 - percentageValue/100)
-    
-    return parsePrice(finalValue.toString())
   }
 
   const submit = () => {
-    const data: (FormDataObject & {items: [...ItemPair[]], days:number, sheets:number}) = {
+    const data: PDFBudgetData = {
       ...formData,
       items: [],
-      days: parseInt(workCostObject.units) || 0,
-      sheets: parseInt(paintCostObject.units) || 0,
+      days: workCostObject.units ??= 0,
+      sheets: paintCostObject.units ??= 0,
+      day: '',
+      month: '',
+      year: ''
     }
     ids.forEach((id) => {
-      if (itemList[id] && (itemList[id].name != '' || itemList[id].value != '')) {
+      if (itemList[id] && (itemList[id].name != '' || itemList[id].value != 0)) {
         data.items.push(itemList[id])
       }
     })
-    createBudgetDocument(data)
+    if (data.items.length <= 9) createBudgetDocument({...data, page:1, totalPages:1})
+    else navigation.navigate('Download', {budgetData: data})
   }
 
   // #endregion
@@ -307,6 +320,28 @@ export default function Form(props) {
     )
   }
 
+  function ItemListDivisoryLine({index, length}) {
+    const indexes = []
+    const smallChunkSize = 9
+    const bigChunkSize = 11
+
+    let i = 0
+    while(length >= 0) {
+      const chunkSize = (length <= 2 * smallChunkSize) ? smallChunkSize : bigChunkSize
+
+      if (chunkSize == smallChunkSize && length > chunkSize) {
+        i += chunkSize
+        length -= chunkSize
+        indexes.push(i)
+      }
+      i += chunkSize
+      length -= chunkSize
+      indexes.push(i)
+    }
+                  
+    return indexes.includes(index) ? <View style={{width:'100%', height:3, backgroundColor:colors.cyan.accent}} /> : <></>
+  }
+
   function CostObjectComponent({ label, object, setter, value }){
     return (
       <View style={[global_styles.input_box, {height:'auto', marginVertical:10}]}>
@@ -317,17 +352,17 @@ export default function Form(props) {
             style = {[global_styles.evenly_divided_input, {fontWeight: 'bold', borderTopLeftRadius:15, backgroundColor:colors.magenta.accent}]}
           />
           <TextInput
-            value = {object.perUnit}
+            value = {numberToPrice(object.perUnit)}
             style = {global_styles.evenly_divided_input}
             placeholderTextColor={colors.text}
             keyboardType='number-pad'
             placeholder='$/Día'
             onChangeText={(text) => {
-              setCostObjectValue(object, setter, 'perUnit', parsePrice(text))
+              setCostObjectValue(object, setter, 'perUnit', priceToNumber(text))
             }}
           />
           <TextInput
-            value = {object.units}
+            value = {numberToFormat(object.units)}
             keyboardType='number-pad'
             style = {[
               global_styles.evenly_divided_input, 
@@ -339,22 +374,22 @@ export default function Form(props) {
             placeholderTextColor={colors.text}
             placeholder='Días'
             onChangeText={(text) => {
-              setCostObjectValue(object, setter, 'units', text)
+              setCostObjectValue(object, setter, 'units', formatToNumber(text))
             }}
           />
           <TextInput
-            value = {object.percentage}
+            value = {numberToPercentage(object.percentage)}
             keyboardType='number-pad'
             style = {global_styles.evenly_divided_input}
             placeholderTextColor={colors.text}
             placeholder='%'
             onChangeText={(text) => {
-              setCostObjectValue(object, setter, 'percentage', parsePercentage(text))
+              setCostObjectValue(object, setter, 'percentage', percentageToNumber(text))
             }}
           />
         </View>
         <TextInput
-          value={formData[value]}
+          value={numberToPrice(formData[value])}
           editable={false}
           style={[global_styles.total_container, {
             backgroundColor:colors.magenta.secondary,
@@ -379,31 +414,12 @@ export default function Form(props) {
         <View style={[global_styles.section, {backgroundColor: colors.gray}]}>
           <View style={{width:'100%',flexDirection:'row', gap:10, alignItems:'center', justifyContent:'center'}}>
             <DateInputComponent></DateInputComponent>
-            <View style={[global_styles.input_box, {backgroundColor: colors.white, height:40, width:'20%',flexDirection:'row', alignItems:'center', paddingVertical:0}]}>
-              <TextInput
-                value = {formData.page}
-                keyboardType='number-pad'
-                style = {[{color:colors.black, width:'50%', textAlign:'center', fontWeight:'bold', overflow:'hidden'}]}
-                placeholder='()'
-                placeholderTextColor={colors.black}
-                onChangeText={(text) => setFormData({...formData, page: parseNumber(text)})}
-              />
-              <Text style={{color:colors.black, fontWeight:'bold'}}>/</Text>
-              <TextInput
-                value = {formData.total_pages}
-                keyboardType='number-pad'
-                style = {[{color:colors.black, width:'50%', textAlign:'center', fontWeight:'bold', overflow:'hidden'}]}
-                placeholder='()'
-                placeholderTextColor={colors.black}
-                onChangeText={(text) => setFormData({...formData, total_pages: parseNumber(text)})}
-              />
-            </View>
             <ButtonComponent color='red' label="Limpiar" callback={() => {
               const test = formData.name == 'test'
               setItemList(test ? mockData.items : {})
               setWorkCostObject(test ? {...mockData.costObjects.work, setTotal:workCostObject.setTotal} : {...emptyCostObject, setTotal:workCostObject.setTotal})
               setPaintCostObject(test ? {...mockData.costObjects.paint, setTotal:paintCostObject.setTotal} : {...emptyCostObject, setTotal:paintCostObject.setTotal})
-              setFormData(test ? {...mockData.formData, total:parsePrice(itemsTotal(mockData.formData, mockData.items).toString())} : initialFormData)
+              setFormData(test ? {...mockData.formData, total:itemsTotal(mockData.formData, mockData.items)} : initialFormData)
             }}/>
           </View>
         </View>
@@ -439,40 +455,42 @@ export default function Form(props) {
         {/* CYAN SECTION */}
         <View style={[global_styles.section, {backgroundColor: colors.cyan.primary}]}>
           <Text style={global_styles.title}>Repuestos a Cambiar</Text>
-          { ids.map((id) =>
-              <View key={'elem' + id} style={[global_styles.multiple_input_container, {marginVertical:10}]}>
-                <View style={[global_styles.multiple_input_container, {width:'auto', backgroundColor:colors.cyan.secondary}]}>
-                  <TextInput
-                    value={getValue(id) != undefined ? getValue(id).name : ''}
-                    style = {[global_styles.double_input_left, {borderRightColor: colors.cyan.primary}]}
-                    placeholderTextColor={colors.text}
-                    placeholder='Item'
-                    onChangeText={(text) => setName(id, text)}
-                  />
-                  <TextInput
-                    value={getValue(id) != undefined ? getValue(id).value : ''}
-                    keyboardType='number-pad'
-                    style = {global_styles.double_input_right}
-                    placeholderTextColor={colors.text}
-                    placeholder='Precio'
-                    onChangeText={(text) => {setValue(id, parsePrice(text))}}
-                  />
+          { ids.map((id, index, list) =>
+              <View key={'elem' + id}>
+                { 
+                  ItemListDivisoryLine({index: index, length:list.length})
+                }
+                <View style={[global_styles.multiple_input_container, {marginVertical:10}]}>
+                  <View style={[global_styles.multiple_input_container, {width:'auto', backgroundColor:colors.cyan.secondary}]}>
+                    <TextInput
+                      value={getItemPairFromID(id)?.name ?? ''}
+                      style = {[global_styles.double_input_left, {borderRightColor: colors.cyan.primary}]}
+                      placeholderTextColor={colors.text}
+                      placeholder='Item'
+                      onChangeText={(text) => setName(id, text)}
+                    />
+                    <TextInput
+                      value={numberToPrice(getItemPairFromID(id)?.value)}
+                      keyboardType='number-pad'
+                      style = {global_styles.double_input_right}
+                      placeholderTextColor={colors.text}
+                      placeholder='Precio'
+                      onChangeText={(text) => {setValue(id, priceToNumber(text))}}
+                    />
+                  </View>
+                  <TouchableOpacity 
+                    style={[global_styles.small_img, {alignSelf:'center', marginLeft: 10}]}
+                    onPress={() => removeItem(id)}
+                  >
+                    <Image source={require('../assets/basura.png')} style = {global_styles.small_img} />
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity 
-                  style={[global_styles.small_img, {alignSelf:'center', marginLeft: 10}]}
-                  onPress={() => removeItem(id)}
-                >
-                  <Image source={require('../assets/basura.png')} style = {global_styles.small_img} />
-                </TouchableOpacity>
               </View>
             )
           }
-          { ids.length < 9 ?
-            (<ButtonComponent callback={addItem} color='cyan'>
-              <Image source={require('../assets/mas.png')} style = {{...global_styles.small_img, marginHorizontal:25}} />
-            </ButtonComponent>)
-            : (<Text style={global_styles.warning}>Se alcanzó el máximo de entradas para este presupuesto.</Text>)
-          }
+          <ButtonComponent callback={addItem} color='cyan'>
+            <Image source={require('../assets/mas.png')} style = {{...global_styles.small_img, marginHorizontal:25}} />
+          </ButtonComponent>
         </View>
         {/* MAGENTA SECTION */}
         <View style={[global_styles.section, {backgroundColor: colors.magenta.primary}]}>
@@ -494,7 +512,7 @@ export default function Form(props) {
               placeholder='Item'
             />
             <TextInput
-              value={formData.mechanicCost}
+              value={numberToPrice(formData.mechanicCost)}
               keyboardType='number-pad'
               style = {[global_styles.evenly_divided_input, {
                 backgroundColor:colors.magenta.secondary,
@@ -504,8 +522,8 @@ export default function Form(props) {
               placeholderTextColor={colors.text}
               placeholder='Precio'
               onChangeText={(text) => {
-                const newFormData = {...formData, mechanicCost: parsePrice(text)}
-                setFormData({...newFormData, total: parsePrice(itemsTotal(newFormData, itemList).toString())})
+                const newFormData : FormDataObject = {...formData, mechanicCost: priceToNumber(text)}
+                setFormData({...newFormData, total: itemsTotal(newFormData, itemList)})
               }}
             />
           </View>
@@ -524,7 +542,7 @@ export default function Form(props) {
               placeholder='Item'
             />
             <TextInput
-              value={formData.total}
+              value={numberToPrice(formData.total)}
               editable={false}
               style = {[global_styles.evenly_divided_input, {
                 width:'75%',

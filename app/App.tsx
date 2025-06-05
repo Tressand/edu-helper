@@ -1,20 +1,35 @@
-import React from 'react'
-import { StatusBar } from 'expo-status-bar';
 import { useColorScheme, View, Text, Linking } from 'react-native';
-import Form from '../components/Form'
+import { StatusBar } from 'expo-status-bar';
+import { NavigationContainer } from '@react-navigation/native';
 import getGlobalStyles, { getColors } from '../styles/global_styles';
+import Form from '../components/Form'
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import DownloadScreen from '../components/DownloadScreen';
 
 export const version = 'v1.5'
+
+const Stack = createNativeStackNavigator()
 
 export default function App() {
   const global_styles = getGlobalStyles(useColorScheme())
   const colors = getColors(useColorScheme())
 
   return (
-    <View style={[global_styles.page]}>
-      <Form></Form>
+    <NavigationContainer>
+      <Stack.Navigator id={undefined}>
+        <Stack.Screen name='Form' component={Form} options={{
+          headerShown: false
+        }}/>
+        <Stack.Screen name='Download' component={DownloadScreen} options={{
+          title: 'Descarga del Presupuesto',
+          headerStyle: {
+            backgroundColor:colors.magenta.secondary,
+          },
+          headerTintColor:colors.white
+        }} />
+      </Stack.Navigator>
       <StatusBar></StatusBar>
-    </View>
+    </NavigationContainer>
   )
 }
 

@@ -1,9 +1,11 @@
-import { PDFDocument } from "pdf-lib"
+import { PDFDocument, PDFForm } from "pdf-lib"
 import * as FileSystem from 'expo-file-system'
-import { parsePhoneNumber, parseLicensePlate, parseDate} from "./parsers"
+import { parsePhoneNumber, parseLicensePlate, dateToFormat, numberToFormat, numberToPrice} from "./parsers"
 import { Platform } from "react-native"
 import { Asset } from "expo-asset"
 import * as Sharing from 'expo-sharing'
+import { PDFBudgetData } from "../components/Form"
+import { PagedPDFBudgetData } from "../components/DownloadScreen"
 
 const budget_template = require('../assets/budget_template.pdf')
 
@@ -32,7 +34,7 @@ async function fetchPdfAssetFromModule(module: any) {
   return bytes
 }
 
-export default async function createBudgetDocument(formData: any) {
+export default async function createBudgetDocument(formData: PagedPDFBudgetData) {
   // Load Form
   const bytes = await fetchPdfAssetFromModule(budget_template)
   const pdf = await PDFDocument.load(bytes)
@@ -44,10 +46,14 @@ export default async function createBudgetDocument(formData: any) {
   // Save PDF to byte array
   const resultBytes = await pdf.save()
 
-  downloadPDFFileFromBytes(resultBytes, `${formData.id != '' ? parseLicensePlate(formData.id) : 'presupuesto'}_${parseDate(formData.date)}.pdf`)
+  downloadPDFFileFromBytes(resultBytes, 
+    `${formData.id != '' ? `[${parseLicensePlate(formData.id)}]` : 'presupuesto'}_`+
+    `${dateToFormat(formData.date)}`+
+    (formData.totalPages > 1 ? `_(${formData.page}-${formData.totalPages}).pdf` : "")
+  )
 }
 
-function fillFormWithFormData(formData: any, form:any){
+function fillFormWithFormData(formData: PagedPDFBudgetData, form:PDFForm){
   form.getTextField('Día').setText(formData.date.getDate().toString())
   form.getTextField('Mes').setText((formData.date.getMonth() + 1).toString())
   form.getTextField('Año').setText(formData.date.getFullYear().toString())
@@ -59,31 +65,33 @@ function fillFormWithFormData(formData: any, form:any){
   form.getTextField('Patente').setText(parseLicensePlate(formData.id))
   form.getTextField('Observaciones').setText(formData.extra)
   form.getTextField('Detalle').setText(formData.locations)
-  form.getTextField('Nro. Hoja').setText(`${formData.page}/${formData.total_pages}`)
+  form.getTextField('Nro. Hoja').setText(`${formData.page}/${formData.totalPages}`)
 
-  let total = 0
   let i = 0
   if (formData.items.length != 0) {
     form.getTextField(`Item0`).setText('Cambio:')
     i++
     formData.items.forEach((item: any) => {
-      if (i > 9) return
       form.getTextField(`Item${i}`).setText('    • ' + item.name)
-      form.getTextField(`Precio${i}`).setText(item.value)
+      form.getTextField(`Precio${i}`).setText(numberToPrice(item.value))
       i++
     })
   } else {
     form.getTextField(`Item0`).setText('No se realizarán cambios de respuestos:')
   }
 
-  form.getTextField((i == 0 ? `Item2` : `Item10`)).setText('Mano de Obra (Chapa) [' + formData.days + ' días]')
-  form.getTextField((i == 0 ? `Precio2` : `Precio10`)).setText(formData.workCost)
-  form.getTextField((i == 0 ? `Item3` : `Item11`)).setText('Mano de Obra (Pintura) [' + formData.sheets + ' paños]')
-  form.getTextField((i == 0 ? `Precio3` : `Precio11`)).setText(formData.paintCost)
-  form.getTextField((i == 0 ? `Item4` : `Item12`)).setText('Mecánica')
-  form.getTextField((i == 0 ? `Precio4` : `Precio12`)).setText(formData.mechanicCost)
+  if (formData.page == formData.totalPages) {
+    form.getTextField((i == 0 ? `Item2` : `Item10`)).setText('Mano de Obra (Chapa) [' + numberToFormat(formData.days) + ' días]')
+    form.getTextField((i == 0 ? `Precio2` : `Precio10`)).setText(numberToPrice(formData.workCost))
+    form.getTextField((i == 0 ? `Item3` : `Item11`)).setText('Mano de Obra (Pintura) [' + numberToFormat(formData.sheets) + ' paños]')
+    form.getTextField((i == 0 ? `Precio3` : `Precio11`)).setText(numberToPrice(formData.paintCost))
+    form.getTextField((i == 0 ? `Item4` : `Item12`)).setText('Mecánica')
+    form.getTextField((i == 0 ? `Precio4` : `Precio12`)).setText(numberToPrice(formData.mechanicCost))
+  } else {
+    form.getTextField((i == 0 ? `Item4` : `Item12`)).setText('Continúa en la siguiente página...')
+  }
 
-  form.getTextField('Total').setText(formData.total)
+  form.getTextField('Total').setText(numberToPrice(formData.total))
 
   form.flatten()
 }
