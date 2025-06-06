@@ -75,7 +75,7 @@ export async function createPagedBudgetDocument(formDatas: PagedPDFBudgetData[])
   const formData = formDatas[0]
   downloadPDFFileFromBytes(resultBytes, 
     `${formData.id != '' ? `[${parseLicensePlate(formData.id)}]` : 'presupuesto'}_`+
-    `${dateToFormat(formData.date)}`
+    `${dateToFormat(formData.date)}.pdf`
   )
 }
 
@@ -123,6 +123,10 @@ function fillFormWithFormData(formData: PagedPDFBudgetData, form:PDFForm){
 }
 
 async function downloadPDFFileFromBytes(bytes: Uint8Array, filename: string) {
+  if (!filename.endsWith(".pdf")) {
+    console.error('filename doesn\'t end with .pdf, correcting')
+    filename = filename + ".pdf"
+  }
   if (Platform.OS === 'web') {
     // On web you can dowload as per usual
     const blob = new Blob([bytes], { type: 'application/pdf' })
