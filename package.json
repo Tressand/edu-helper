@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo run:android",
     "web": "expo start --web",
-    "build": "eas build -p android --profile development --local"
+    "build": "eas build -p android --profile development --local",
+    "ios": "expo run:ios"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
@@ -34,6 +35,12 @@
     "@babel/core": "^7.20.0",
     "@types/react": "~19.1.0",
     "typescript": "~5.9.2"
+  },
+  "overrides": {
+    "js-yaml": "^4.1.2",
+    "postcss": "^8.5.10",
+    "uuid": "^11.1.1",
+    "ws": "^8.5.1"
   },
   "private": true
 }

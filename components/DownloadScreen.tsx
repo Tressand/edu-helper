@@ -10,7 +10,7 @@ type stateSetter<Type> = React.Dispatch<React.SetStateAction<Type>>
 type setState<Type> =  [Type, stateSetter<Type>]
 
 export default function DownloadScreen({ route }) {
-  const [files, setFiles]: setState<PagedPDFBudgetData[]> = useState([])
+  const [files, setFiles]: setState<PagedPDFBudgetData[]> = useState(Array.of<PagedPDFBudgetData>())
 
   const { budgetData } = route?.params ?? {}
   const global_styles = getGlobalStyles(useColorScheme())
@@ -21,7 +21,7 @@ export default function DownloadScreen({ route }) {
     const smallChunkSize = 9
     const items: object[] = budgetData.items
 
-    const chunks = []
+    const chunks : object[][] = []
     while(items.length != 0) {
       const chunkSize = (items.length <= 2 * smallChunkSize) ? smallChunkSize : bigChunkSize
 

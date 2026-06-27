@@ -138,12 +138,12 @@ const emptyCostObject = {
 
 // #endregion
 
-export default function Form({ navigation }) {
+export default function Form({ navigation } : { navigation : any}) {
   // #region STATE
 
   const [ids, setIds]: setState<[...number[]]> = useState([1,2,3,4])
   const [formData, setFormData]: setState<FormDataObject> = useState(initialFormData)
-  const [showDatePicker, setShowDatePicker]: setState<Boolean> = useState(false)
+  const [showDatePicker, setShowDatePicker]: setState<boolean> = useState(false)
   const [itemList, setItemList]: setState<ItemList> = useState({})
   const [workCostObject, setWorkCostObject]: setState<CostObject> = useState({
     ...emptyCostObject,
@@ -239,7 +239,7 @@ export default function Form({ navigation }) {
 
   // #region COMPONENTS
 
-  function DateInputComponent(props) {
+  function DateInputComponent(props:any) {
     return (
     <>
       { Platform.OS != 'web' ? 
@@ -250,7 +250,7 @@ export default function Form({ navigation }) {
               <DateTimePicker
                 testID="dateTimePicker"
                 value={formData.date}
-                themeVariant={theme}
+                themeVariant={theme ?? "light"}
                 mode={'date'}
                 is24Hour={true}
                 onChange={(_ev, date) => {
@@ -321,11 +321,11 @@ export default function Form({ navigation }) {
   }
 
   function ItemListDivisoryLine({index, length}) {
-    const indexes = []
+    const indexes : number[] = []
     const smallChunkSize = 9
     const bigChunkSize = 11
 
-    let i = 0
+    let i : number = 0
     while(length >= 0) {
       const chunkSize = (length <= 2 * smallChunkSize) ? smallChunkSize : bigChunkSize
 

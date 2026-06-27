@@ -3,6 +3,7 @@
     "development": {
       "channel": "development",
       "android": {
+        "ANDROID_HOME": "/usr/lib/android-sdk",
         "buildType": "apk",
         "distribution": "internal"
       }

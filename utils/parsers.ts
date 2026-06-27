@@ -44,12 +44,11 @@ export const numberToFormat = (num: number) => {
   .split('')
   .reverse()
   .join('')
-  .match(/.{1,3}/g)
+  .match(/.{1,3}/g) ?? []
   .join('.')
   .split('')
   .reverse()
   .join('')
-
   const parsedFloat = parsedInt + mantise
   return value.endsWith(',') ? parsedFloat + ',' : parsedFloat
 }
