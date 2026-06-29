@@ -3,7 +3,7 @@
     "development": {
       "channel": "development",
       "android": {
-        "ANDROID_HOME": "/usr/lib/android-sdk",
+        "ANDROID_HOME": "C:\\Users\\geroh\\AppData\\Local\\Android\\Sdk",
         "buildType": "apk",
         "distribution": "internal"
       }

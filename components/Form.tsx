@@ -1,7 +1,8 @@
 // #region IMPORTS
 
 import React, { useState } from 'react'
-import { Text, View, ScrollView, TouchableOpacity, TextInput, Image, Platform, SafeAreaView, useColorScheme, KeyboardAvoidingView, Linking} from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity, TextInput, Image, Platform, useColorScheme, KeyboardAvoidingView, Linking} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { createBudgetDocument } from '../utils/pdfHandler';
 import { parsePhoneNumber, numberToPrice, parseLicensePlate, priceToNumber, numberToPercentage, percentageToNumber, numberToFormat, parsePrefixedNumber, formatToNumber } from '../utils/parsers';
@@ -138,7 +139,7 @@ const emptyCostObject = {
 
 // #endregion
 
-export default function Form({ navigation } : { navigation : any}) {
+export default function Form() {
   // #region STATE
 
   const [ids, setIds]: setState<[...number[]]> = useState([1,2,3,4])
