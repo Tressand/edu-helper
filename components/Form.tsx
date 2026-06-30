@@ -1,11 +1,11 @@
 // #region IMPORTS
 
 import React, { useState } from 'react'
-import { Text, View, ScrollView, TouchableOpacity, TextInput, Image, Platform, useColorScheme, KeyboardAvoidingView, Linking} from 'react-native';
+import { Text, View, ScrollView, TouchableOpacity, TextInput, Image, Platform, useColorScheme, KeyboardAvoidingView} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { createBudgetDocument } from '../utils/pdfHandler';
-import { parsePhoneNumber, numberToPrice, parseLicensePlate, priceToNumber, numberToPercentage, percentageToNumber, numberToFormat, parsePrefixedNumber, formatToNumber } from '../utils/parsers';
+import { parsePhoneNumber, numberToPrice, parseLicensePlate, priceToNumber, numberToPercentage, percentageToNumber, numberToFormat, formatToNumber } from '../utils/parsers';
 import getGlobalStyles, { getColors, ColorPalette } from '../styles/global_styles';
 import AppInfoStrip from './AppInfoStrip';
 
@@ -232,8 +232,7 @@ export default function Form() {
         data.items.push(itemList[id])
       }
     })
-    if (data.items.length <= 9) createBudgetDocument({...data, page:1, totalPages:1})
-    else navigation.navigate('Download', {budgetData: data})
+    createBudgetDocument(data);
   }
 
   // #endregion
