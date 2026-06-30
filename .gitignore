@@ -40,3 +40,4 @@ android
 *.apk
 
 .vscode
+package-lock.json

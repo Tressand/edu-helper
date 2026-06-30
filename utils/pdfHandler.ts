@@ -1,4 +1,4 @@
-import { PDFDocument, PDFForm } from "pdf-lib"
+import { PDFDocument, PDFForm } from "pdf-lib/cjs"
 import { File, Paths } from 'expo-file-system'
 import { parsePhoneNumber, parseLicensePlate, dateToFormat, numberToFormat, numberToPrice} from "./parsers"
 import { Platform } from "react-native"
