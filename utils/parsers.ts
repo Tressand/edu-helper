@@ -1,3 +1,5 @@
+import { PDFBudgetData } from "../components/Form"
+
 export const parsePhoneNumber = (number: number) => {
   if (number == 0) return ''
   let str = number.toString()
@@ -35,22 +37,12 @@ export const parseLicensePlate = (id: string) => {
 
 export const numberToFormat = (num: number) => {
   if(num == 0 || Number.isNaN(num)) return ''
-  const value = num.toString()
-  const mantise = value.split(',')[1] ? (',' + value.split(',')[1]) : ''
-  const parsedInt = value
-  .replace(/[^\d,]/, '')
-  .split(',')
-  [0]
-  .split('')
-  .reverse()
-  .join('')
-  .match(/.{1,3}/g) ?? []
-  .join('.')
-  .split('')
-  .reverse()
-  .join('')
-  const parsedFloat = parsedInt + mantise
-  return value.endsWith(',') ? parsedFloat + ',' : parsedFloat
+  const numstr = num.toString().split('.')
+  const mantise = numstr.length > 1 ? (',' + numstr[1]) : ''
+  let reverseInt = numstr[0].split('').reverse().join('')
+  let groupedByThousands = reverseInt.match(/.{1,3}/g) ?? []
+  let parsedInt = groupedByThousands.join('.').split('').reverse().join('')
+  return parsedInt + mantise
 }
 
 export const formatToNumber = (value: string) => {
@@ -86,8 +78,8 @@ export const dateToFormat = (date: Date) => {
   return `${date.getDate() < 10 ? '0' + date.getDate(): date.getDate()}-${date.getMonth() < 10 ? '0' + date.getMonth(): date.getMonth()}-${date.getFullYear()}`
 }
 
-export const logFormData = (formData) => {
-  alert(`
+export const logFormData = (formData : PDFBudgetData, options? : {omit_items?:boolean, log_console? : boolean, log_alert?: boolean}) => {
+  let output = `
 name: ${formData.name}\n
 address: ${formData.address}\n
 number: ${formData.number}\n
@@ -100,7 +92,14 @@ workCost: ${formData.workCost}\n
 paintCost: ${formData.paintCost}\n
 mechanicCost: ${formData.mechanicCost}\n
 date: ${formData.date.toLocaleDateString()}\n
-`)
+`;
+  if (!options?.omit_items) {
+    output += 'items:\n'
+    formData.items.forEach((item,i) => { output += `  item${i}: ${item.name}, value: ${item.value}\n` })
+  }
+  if (options?.log_alert) alert(output);
+  if (options?.log_console) console.log(output);
+
 }
 
 export const logItemList = (ids,itemList) => {

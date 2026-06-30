@@ -1,6 +1,6 @@
 import { PDFDocument, PDFForm } from "pdf-lib/cjs"
 import { File, Paths } from 'expo-file-system'
-import { parsePhoneNumber, parseLicensePlate, dateToFormat, numberToFormat, numberToPrice} from "./parsers"
+import { parsePhoneNumber, parseLicensePlate, dateToFormat, numberToFormat, numberToPrice, logFormData} from "./parsers"
 import { Platform } from "react-native"
 import { Asset } from "expo-asset"
 import * as Sharing from 'expo-sharing'
@@ -34,6 +34,7 @@ async function fetchPdfAssetFromModule(module: any) {
 }
 
 export async function createBudgetDocument(formData: PDFBudgetData) {
+  logFormData(formData , {omit_items: false, log_console: true, log_alert:false})
   // Load Form
   const result = await PDFDocument.create()
   const bytes = await fetchPdfAssetFromModule(budget_template)
@@ -128,7 +129,7 @@ async function downloadPDFFileFromBytes(bytes: Uint8Array, filename: string) {
 
     // Save the file
     const file = new File(Paths.cache, filename)
-    await file.write(bytes)
+    file.write(bytes)
     
     // Share the file
     if (await Sharing.isAvailableAsync()) {
